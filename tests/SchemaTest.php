@@ -10,7 +10,7 @@ use PDO;
 
 final class SchemaTest extends DatabaseTestCase
 {
-    public function testCreatesTheEighteenBusinessTables(): void
+    public function testCreatesTheBusinessTables(): void
     {
         $tables = $this->db->query(
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name <> 'schema_migrations' ORDER BY name"
@@ -18,7 +18,7 @@ final class SchemaTest extends DatabaseTestCase
 
         self::assertSame([
             'body_measure', 'exercise', 'food', 'food_favorite', 'pain_report', 'protein_log', 'push_subscription',
-            'pushup_day', 'pushup_log', 'reminder', 'set_log', 'settings', 'template_block', 'template_item', 'user',
+            'pushup_day', 'pushup_feedback', 'pushup_log', 'pushup_plan_change', 'reminder', 'set_log', 'settings', 'template_block', 'template_item', 'user',
             'user_item_load', 'workout_session', 'workout_template',
         ], $tables);
     }

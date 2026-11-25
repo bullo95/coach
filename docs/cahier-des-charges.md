@@ -1,6 +1,6 @@
 # Cahier des charges — Application de suivi sportif
 
-Nov 25, 2026 · @Bruno · révision 4 (voir « Journal des décisions »)
+Nov 25, 2026 · @Bruno · révision 10 (voir « Journal des décisions »)
 
 ## Contexte et objectifs
 
@@ -97,7 +97,9 @@ Le programme est livré en données (`data/program.json`, chargé par le seed) ;
 - Enchaînement dans un circuit : 15 s de transition entre deux exercices (réglable), sauf en AMRAP où l'enchaînement est libre.
 - Exercices en durée : compte à rebours avec bip à 3 s de la fin, plus vibration sur Android. iOS ne gère pas la vibration web : sur iPhone, le signal passe par le son et un flash de l'écran.
 - Le son est débloqué par le tap sur « Démarrer » (obligation iOS) ; l'écran de démarrage rappelle que le bouton silencieux de l'iPhone coupe les bips.
-- Exercices en répétitions : bouton « Fait », puis répétitions réalisées modifiables par +/−.
+- Exercices en répétitions : répétitions réalisées réglables par +/− (préremplies avec l'objectif), puis bouton « Fait ». Même principe pour la charge (barre : pas de 2,5 kg ; kettlebell : 10 ou 12 kg).
+- Exercices en durée « par côté » : deux chronos qui s'enchaînent (côté gauche, côté droit).
+- Le bouton principal (« Fait », « Passer ») reste fixé en bas de l'écran, sous le pouce.
 - Repos : minuteur automatique avec aperçu de l'exercice suivant, bouton « Passer ».
 - Circuit AMRAP : chrono global de 20 min et compteur de tours.
 - Fractionné : pente fixe réglée au début (10 à 15 %), seule la vitesse alterne (vitesses rapide et lente réglables, ex. 5,5 et 3,5 km/h). Chaque changement est annoncé par un son, une couleur d'écran et un libellé « RAPIDE » / « LENTE » (pas d'information par la couleur seule).
@@ -125,14 +127,38 @@ Les pompes se font **tous les jours**, jours de séance compris : **10 séries d
 | Paliers de série | 7, 14, 30, 60, 100, 200 et 365 jours | Message de félicitations et palier affiché dans le Suivi |
 | Du mois | Jours atteints sur les jours écoulés du mois | « 18 / 20 jours » dans le Suivi |
 | Record | Plus longue série de jours, plus grand total sur une journée | Suivi |
-| Progression de X | Après 14 jours consécutifs atteints sans joker ni douleur, l'app propose X + 1 ; l'utilisateur accepte ou refuse, et l'app ne repropose pas avant 14 jours | Proposition sur l'accueil |
+| Progression | Décidée par le coach d'après le ressenti (voir « Coach des pompes » ci-dessous) | Conseil sur l'accueil |
 
 - X ne diminue jamais automatiquement ; l'utilisateur peut le baisser à tout moment, sans perdre sa série de jours.
 - Chaque journée garde l'objectif qui s'appliquait ce jour-là : changer X ne modifie pas l'historique.
 
+**Coach des pompes**
+
+L'utilisateur fixe lui-même son programme (pompes par série, séries par jour) et son objectif, sur la page « Mon programme de pompes ». Le coach conseille, il ne change jamais rien sans accord.
+
+- Quand les séries du jour sont terminées, l'app pose deux questions : « C'était comment ? » (facile, correct, difficile) et « Une douleur quelque part ? » (aucune, épaule, coude, poignet, dos, autre).
+- Objectif au choix : enchaîner plus de pompes d'affilée (le coach allonge les séries), faire plus de pompes dans la journée (le coach ajoute des séries), ou les deux en alternance.
+- Le coach regarde les 3 dernières journées bouclées depuis le dernier changement de programme :
+
+| Situation | Conseil |
+| --- | --- |
+| Moins de 3 journées avec ressenti | Attendre |
+| 3 journées faciles, sans douleur | Augmenter : +5 % de pompes par série (au moins +1) ou +1 série, selon l'objectif |
+| 5 journées jamais difficiles, sans douleur | Augmenter de la même façon |
+| 1 ou 2 journées difficiles sur 3 | Garder le programme |
+| 3 journées difficiles sur 3 | Baisser de 5 % les pompes par série |
+| 1 douleur sur les 3 dernières journées | Aucune augmentation |
+| 2 douleurs sur les 3 dernières journées | Baisser de 15 % les pompes par série, et conseil de consulter si la douleur dure |
+| 2 journées manquées sur 7 jours | Une série de moins, la régularité d'abord |
+
+- Chaque conseil est affiché avec ses raisons et le changement chiffré (ex. 10 × 23 → 10 × 24). Deux boutons : accepter ou garder le programme. Après un refus ou un changement, le coach attend 3 nouvelles journées.
+- Un changement s'applique à partir du lendemain (ou le jour même si aucune série n'est encore faite).
+- La page explique la différence : plus de pompes par série fait progresser le nombre de pompes enchaînées mais sollicite davantage les articulations ; plus de séries ajoute du volume sans durcir chaque série, au prix d'un moment de plus dans la journée.
+- Une seule variable change à la fois.
+
 **Jokers**
 
-- 3 jokers par mois civil, remis à 3 le 1ᵉʳ du mois ; les jokers non utilisés ne se reportent pas.
+- 3 jokers par mois civil, remis à 3 le 1ᵉʳ du mois ; les jokers non utilisés ne se reportent pas. Le quota est **commun aux pompes et aux séances** : chaque journée de pompes couverte et chaque séance sautée en consomme un.
 - Un joker couvre une journée dont l'objectif n'est pas atteint : la série de jours n'est pas cassée. La journée est marquée « joker » dans l'historique, pas « atteinte ».
 - Utilisation manuelle : bouton « Poser un joker » sur l'accueil, pour aujourd'hui ou hier (rattrapage d'un oubli).
 - Utilisation automatique (activée par défaut, désactivable) : à minuit, une journée non atteinte consomme un joker s'il en reste ; un message le signale à la première ouverture du lendemain.
@@ -174,8 +200,9 @@ Règles appliquées par l'app, adaptées à un démarrage à 47 ans. Les semaine
 
 - Les séances tournent dans l'ordre A → B → C, quel que soit le jour. Une séance manquée n'est pas perdue : la suivante reprend là où la rotation s'est arrêtée (lundi A manqué → mercredi A).
 - Deux séances ne sont jamais planifiées deux jours de suite.
-- « Reporter à demain » n'est proposé que si ni la veille ni le surlendemain du report ne sont des jours de séance (avec lundi, mercredi, vendredi : seul le vendredi peut être reporté au samedi). Sinon, l'app indique que la séance passe au prochain jour prévu.
-- Le compteur de la semaine affiche x / nombre de jours de séance réglés (3 par défaut).
+- « Reporter à demain » n'est proposé que si le lendemain du jour de report n'est pas un jour de séance (avec lundi, mercredi, vendredi : seul le vendredi peut être reporté au samedi). Sinon, l'app indique que la séance passe au prochain jour prévu.
+- Le compteur de la semaine affiche x / nombre de jours de séance réglés (3 par défaut), suivi du nombre de jokers utilisés sur des séances.
+- Sauter une séance avec un joker : bouton « Sauter avec un joker » sur l'accueil, le jour de la séance. La séance n'est pas comptée comme réalisée, elle reste la prochaine dans la rotation et apparaît dans l'historique comme « sautée avec un joker ». Le joker peut être annulé le jour même.
 
 ### F5 — Mesures et historique
 
@@ -352,21 +379,23 @@ L'app tient en 9 écrans, navigation par barre en bas (Accueil, Séances, Proté
 
 ## Modèle de données
 
-Dix-huit tables SQLite suffisent : le programme (modèle), ce qui a été fait (journal), les mesures, les protéines et les rappels. Les champs notés JSON sont stockés en texte (fonctions JSON de SQLite), les dates en texte ISO 8601.
+Vingt tables SQLite suffisent : le programme (modèle), ce qui a été fait (journal), les mesures, les protéines et les rappels. Les champs notés JSON sont stockés en texte (fonctions JSON de SQLite), les dates en texte ISO 8601.
 
 | Table | Champs principaux | Remarques |
 | --- | --- | --- |
 | `user` | id, email, password\_hash, timezone, created\_at | Un seul compte |
-| `settings` | user\_id, session\_days (JSON), session\_time, program\_start\_date, pushups\_reps\_per\_set (X), pushups\_sets, pushups\_light\_day\_enabled, pushups\_light\_day\_sets, pushups\_jokers\_per\_month, pushups\_joker\_auto, pushups\_last\_x\_offer\_at, pushups\_window\_start, pushups\_window\_end, protein\_coef, meals\_per\_day, quiet\_start, quiet\_end, sound\_enabled, vibration\_enabled, circuit\_transition\_s, interval\_fast\_kmh, interval\_slow\_kmh | Une ligne par utilisateur |
+| `settings` | user\_id, session\_days (JSON), session\_time, program\_start\_date, pushups\_reps\_per\_set (X), pushups\_sets, pushups\_light\_day\_enabled, pushups\_light\_day\_sets, pushups\_jokers\_per\_month, pushups\_joker\_auto, pushups\_last\_x\_offer\_at, pushups\_goal (endurance, volume, equilibre), pushups\_window\_start, pushups\_window\_end, protein\_coef, meals\_per\_day, quiet\_start, quiet\_end, sound\_enabled, vibration\_enabled, circuit\_transition\_s, interval\_fast\_kmh, interval\_slow\_kmh | Une ligne par utilisateur |
 | `exercise` | id, slug, name\_fr, name\_en, muscles, cues (JSON, 3 consignes), mistake, easier\_variant\_id, easier\_variant\_text, media\_type, media\_paths (JSON), source, license, attribution | Bibliothèque |
 | `workout_template` | id, code (A/B/C), name, est\_duration\_min | Programme |
 | `template_block` | id, template\_id, ref, position, name, type (warmup, circuit, sets, interval, amrap, cooldown), rounds, rest\_between\_rounds\_s, duration\_s, active | Blocs d'une séance |
 | `template_item` | id, block\_id, ref, exercise\_id, position, target\_reps, target\_reps\_max, target\_seconds, target\_seconds\_max, per\_side, load\_kg, load\_label, rest\_s, active | Exercice dans un bloc ; `ref` est la clé stable du JSON, `active` = 0 pour un élément retiré du programme mais présent dans l'historique ; les champs `_max` portent les fourchettes (« 20 à 30 s ») |
 | `user_item_load` | id, user\_id, template\_item\_id, load\_kg, target\_reps, rest\_s, validated\_at | Charges et volumes validés lors des progressions, sans toucher au programme |
-| `workout_session` | id, client\_uuid, user\_id, template\_id, planned\_date, started\_at, ended\_at, status (planned, in\_progress, done, skipped), rounds\_done, effort\_1\_5, pain\_flag, note | Une séance réalisée |
+| `workout_session` | id, client\_uuid, user\_id, template\_id, planned\_date, started\_at, ended\_at, status (planned, in\_progress, done, skipped), joker, rounds\_done, effort\_1\_5, pain\_flag, note | Une séance réalisée |
 | `set_log` | id, client\_uuid, session\_id, template\_item\_id, round, reps\_done, seconds\_done, load\_kg, logged\_at | Une ligne par série |
 | `pushup_log` | id, client\_uuid, user\_id, logged\_at, count | Une ligne par série de pompes |
 | `pushup_day` | id, user\_id, day, reps\_per\_set, sets\_target, target, done, status (in\_progress, reached, joker, missed), joker\_mode (manual, auto, nullable), closed\_at | Une ligne par jour : objectif figé ce jour-là, résultat, joker ; sert aux séries de jours, records et au décompte des jokers du mois |
+| `pushup_feedback` | id, user\_id, day, effort (1 facile, 2 correct, 3 difficile), pain\_area, created\_at | Ressenti d'une journée de pompes bouclée |
+| `pushup_plan_change` | id, user\_id, changed\_at, day, reps\_per\_set, sets, kind (manual, coach\_reps, coach\_sets, coach\_decrease, declined) | Historique du programme de pompes et des conseils refusés |
 | `pain_report` | id, user\_id, reported\_at, context (workout, pushups), area (épaule, coude, dos, genou, autre), session\_id (nullable), reduced\_until | Douleurs signalées ; `reduced_until` porte la réduction de 3 jours des pompes |
 | `body_measure` | id, user\_id, measured\_at, weight\_kg, waist\_cm | Poids et tour de taille |
 | `food` et `food_favorite` | food : id, ciqual\_code, name, protein\_g\_per\_100g ; favorite : id, user\_id, food\_id, label, portion\_g | Ciqual importé + portions de l'utilisateur |
@@ -490,6 +519,8 @@ L'app doit fonctionner comme une app installée sur le téléphone, y compris sa
 
 - Manifest web (nom, icônes, `display: standalone`) et service worker : installable sur iPhone et Android.
 - La séance du jour, ses fiches et ses images sont en cache avant le début : une séance entière se fait sans réseau.
+- Fichiers de l'app servis « réseau d'abord, cache si hors ligne » : une mise à jour est visible dès le lancement suivant ; les visuels d'exercices sont servis depuis le cache.
+- L'état de la séance en cours (étape, chrono, charges) est gardé sur le téléphone pour la reprise pendant 12 h ; à la réouverture, la séance reprend en pause.
 - Les saisies hors ligne (séries, pompes, protéines) sont stockées en IndexedDB puis envoyées au retour du réseau, avec un identifiant unique par saisie pour éviter les doublons.
 
 **Ergonomie et accessibilité**
@@ -497,7 +528,7 @@ L'app doit fonctionner comme une app installée sur le téléphone, y compris sa
 - Mode séance utilisable d'une main, cibles tactiles de 48 px minimum, texte principal lisible à un mètre.
 - Sons et vibrations activables séparément ; aucune information portée par la couleur seule.
 - Contrastes et navigation conformes au RGAA niveau AA.
-- Thème sombre par défaut en séance.
+- Thème sombre unique : fond noir, halo rouge en haut d'écran, accent rouge pour les actions, vert réservé à ce qui est fait ou atteint, cartes arrondies, barre de navigation flottante (direction visuelle fournie par l'utilisateur).
 
 **Sécurité et données**
 
@@ -615,4 +646,55 @@ Révision 5 du 25 novembre 2026 : précisions issues du lot 1.
 | Protection CSRF | Écritures en JSON uniquement, cookie de session SameSite=Lax |
 | Table technique | `schema_migrations` (versions appliquées), hors des 18 tables métier |
 | Port local | 8010 (le 8000 est souvent déjà pris) |
+
+Révision 6 du 25 novembre 2026 : précisions issues du lot 2.
+
+| Sujet | Décision |
+| --- | --- |
+| Règle de report | Formulation corrigée : report possible si le lendemain du jour de report n'est pas un jour de séance (l'ancienne formulation interdisait tout report) |
+| Saisie des répétitions | Réglage +/− avant « Fait » plutôt qu'après, pour ne pas ajouter d'écran |
+| Synchronisation | Une seule route `POST /api/sync` reçoit les saisies par lots (début de séance, série, fin de séance), idempotente par `client_uuid` ; une saisie invalide est refusée sans bloquer les autres |
+| Reprise | État de la séance gardé sur le téléphone ; reprise en pause ; séance clôturée automatiquement après 12 h |
+| Mise à jour de l'app | Service worker « réseau d'abord » pour les fichiers de l'app |
+| Design | Thème sombre unique noir et rouge, inspiré de la maquette fournie |
+| Reporté | Suggestions de progression (F4) et bouton « Reporter à demain » : avec les rappels (lot 5) |
+
+Révision 7 du 25 novembre 2026 : pompes et visuels avancés, à la demande de l'utilisateur.
+
+| Sujet | Décision |
+| --- | --- |
+| Pompes quotidiennes | Avancées du lot 4 : carte sur l'accueil (séries et total du jour, jauge, bouton « +X », autre nombre, annulation de la dernière série, encouragements), série de jours, record, calendrier dans le Suivi |
+| Jokers | Pose manuelle pour aujourd'hui ou pour hier ; joker automatique pour une journée manquée ; un joker posé le jour même est rendu si l'objectif est finalement atteint |
+| Clôture des journées | Faite au premier accès du lendemain, sans attendre le cron ; le cron du lot 5 fera la même chose à minuit |
+| Semaine | Le compteur de séances compte les jours avec séance (deux séances le même jour comptent pour une) |
+| Visuels | Avancés du lot 3 : 20 exercices sur 21 illustrés par deux images free-exercise-db converties en WebP et servies par l'app, alternées toutes les 1,5 s ; certains visuels sont approchants (notés dans `data/exercise_media.json`) ; hollow hold sans visuel |
+| Vidéos | L'app sait afficher une vidéo en boucle sans son à la place des images (champ `video` de `data/exercise_media.json`) ; free-exercise-db n'en fournit pas : source à choisir (wger ou vidéos filmées) |
+| Reste du lot 4 | Réglage de X et des jokers dans l'app, réduction après douleur, proposition X + 1, protéines, mesures |
+
+Révision 8 du 25 novembre 2026 : jokers communs.
+
+| Sujet | Décision |
+| --- | --- |
+| Jokers et séances | Les jokers permettent aussi de sauter la séance du jour ; quota de 3 par mois commun aux pompes et aux séances (`workout_session.joker`, migration 002) |
+| Séance sautée | Non comptée comme réalisée, reste la prochaine dans la rotation, annulable le jour même |
+
+Révision 9 du 25 novembre 2026 : l'app coache les pompes.
+
+| Sujet | Décision |
+| --- | --- |
+| Programme | Fixé par l'utilisateur : pompes par série, séries par jour, journée allégée, objectif (page « Mon programme de pompes ») |
+| Ressenti | Demandé quand les séries du jour sont terminées : difficulté sur 3 niveaux et douleur éventuelle (`pushup_feedback`) |
+| Conseil | Règles fixes et expliquées, sur les 3 dernières journées ; la douleur et la régularité passent avant l'augmentation ; l'utilisateur valide toujours |
+| Ancienne règle | « X + 1 après 14 jours atteints » remplacée par le coach |
+| Séances A/B/C | Le même principe (ressenti puis conseil de charge) reste à faire pour les séances |
+
+Révision 10 du 25 novembre 2026 : vidéos des exercices.
+
+| Sujet | Décision |
+| --- | --- |
+| Style des vidéos | Dessin animé impersonnel : personnage simple en aplats, débardeur rouge et short noir, fond uni très sombre, sans texte ni son ; pas de vraie personne |
+| Production | Vidéos générées avec Gemini (compte de l'utilisateur), une par exercice, validées par l'utilisateur avant intégration ; origine indiquée sur la fiche |
+| Format | MP4 H.264 sans piste son, 854 × 480, environ 100 Ko pour 10 s, avec une image d'attente ; lecture en boucle, y compris hors ligne (le service worker découpe la copie en cache) |
+| Avancement | Squat gobelet fait ; les 20 autres exercices gardent leurs deux images en attendant |
+| Limite connue | Sur la vidéo du squat gobelet, la descente est moins profonde que la consigne et la kettlebell est tenue un peu en avant de la poitrine : la consigne écrite fait foi |
 

@@ -26,6 +26,7 @@ final class Seeder
         $this->db->beginTransaction();
         try {
             $exerciseIds = $this->seedExercises($exercises);
+            $this->seedMedia($exerciseIds);
             $counts = $this->seedProgram($program['templates'] ?? [], $exerciseIds);
             $this->db->commit();
         } catch (\Throwable $e) {
@@ -79,6 +80,41 @@ final class Seeder
         }
 
         return $ids;
+    }
+
+    /**
+     * Visuels : data/exercise_media.json (rempli par bin/media-import.php). Une vidéo passe avant les images.
+     *
+     * @param array<string, int> $exerciseIds
+     */
+    private function seedMedia(array $exerciseIds): void
+    {
+        $file = $this->dataDir . '/exercise_media.json';
+        if (!is_file($file)) {
+            return;
+        }
+        $update = $this->db->prepare(
+            'UPDATE exercise SET media_type = ?, media_paths = ?, source = ?, license = ?, attribution = ? WHERE id = ?'
+        );
+        foreach (self::readJson($file) as $slug => $m) {
+            if (!isset($exerciseIds[$slug]) || !\is_array($m)) {
+                continue;
+            }
+            $files = array_values($m['files'] ?? []);
+            $video = $m['video'] ?? null;
+            $type = $video ? 'video' : ($files ? 'images' : 'placeholder');
+            // Vidéo : [vidéo, image d'attente, puis les images de repli].
+            $paths = $video ? array_merge([$video], isset($m['poster']) ? [$m['poster']] : [], $files) : $files;
+            $has = $type !== 'placeholder';
+            $update->execute([
+                $type,
+                json_encode($paths, JSON_UNESCAPED_SLASHES),
+                $has ? ($m['source'] ?? null) : null,
+                $video ? null : ($has ? ($m['license'] ?? null) : null),
+                $video ? ($m['video_source'] ?? ($m['attribution'] ?? null)) : ($has ? ($m['attribution'] ?? null) : null),
+                $exerciseIds[$slug],
+            ]);
+        }
     }
 
     /**

@@ -1,24 +1,309 @@
 {
-  "_doc": "Correspondance exercice → source des visuels, remplie au lot 3 (php bin/media-import.php). source : free-exercise-db | wger | local. id : identifiant dans la source, ou chemins des fichiers locaux.",
-  "marche-tapis": { "source": "local", "id": null, "terms": [], "status": "à filmer" },
-  "mobilite": { "source": "wger", "id": null, "terms": ["arm circles", "hip circles", "cat cow"], "status": "à vérifier" },
-  "squat-a-vide": { "source": "free-exercise-db", "id": null, "terms": ["bodyweight squat"], "status": "à vérifier" },
-  "squat-banc": { "source": "free-exercise-db", "id": null, "terms": ["box squat", "bench squat"], "status": "à vérifier" },
-  "squat-gobelet": { "source": "free-exercise-db", "id": null, "terms": ["goblet squat"], "status": "à vérifier" },
-  "rowing-barre": { "source": "free-exercise-db", "id": null, "terms": ["bent over barbell row"], "status": "à vérifier" },
-  "souleve-de-terre-jambes-tendues": { "source": "free-exercise-db", "id": null, "terms": ["stiff-legged deadlift", "romanian deadlift"], "status": "à vérifier" },
-  "fentes-arriere": { "source": "free-exercise-db", "id": null, "terms": ["rear lunge", "reverse lunge"], "status": "à vérifier" },
-  "releves-jambes-banc": { "source": "free-exercise-db", "id": null, "terms": ["flat bench leg raise", "lying leg raise"], "status": "à vérifier" },
-  "planche": { "source": "free-exercise-db", "id": null, "terms": ["plank"], "status": "à vérifier" },
-  "rotations-russes": { "source": "free-exercise-db", "id": null, "terms": ["russian twist"], "status": "à vérifier" },
-  "kettlebell-swing": { "source": "free-exercise-db", "id": null, "terms": ["kettlebell swing"], "status": "à vérifier" },
-  "marche-inclinee": { "source": "local", "id": null, "terms": [], "status": "à filmer" },
-  "marche-fermier": { "source": "wger", "id": null, "terms": ["suitcase carry", "farmer's walk"], "status": "à vérifier" },
-  "dead-bug": { "source": "wger", "id": null, "terms": ["dead bug"], "status": "à vérifier" },
-  "hollow-hold": { "source": "wger", "id": null, "terms": ["hollow hold", "hollow body"], "status": "à vérifier" },
-  "developpe-couche": { "source": "free-exercise-db", "id": null, "terms": ["barbell bench press"], "status": "à vérifier" },
-  "rowing-kettlebell-banc": { "source": "free-exercise-db", "id": null, "terms": ["one arm kettlebell row", "one arm dumbbell row"], "status": "à vérifier" },
-  "crunch-banc": { "source": "free-exercise-db", "id": null, "terms": ["crunch", "decline crunch"], "status": "à vérifier" },
-  "mountain-climbers": { "source": "free-exercise-db", "id": null, "terms": ["mountain climbers"], "status": "à vérifier" },
-  "etirements": { "source": "free-exercise-db", "id": null, "terms": ["hip flexor stretch", "child's pose", "cat stretch"], "status": "à vérifier" }
+    "_doc": "Correspondance exercice → visuels. source : free-exercise-db | wger | local. id : identifiant dans la source. Lancer « php bin/media-import.php » pour télécharger et convertir (remplit files), puis « php bin/seed.php ». video : chemin d'une vidéo courte sans son déposée dans public/media/ (facultatif, prioritaire sur les images). poster : image d'attente de la vidéo.",
+    "marche-tapis": {
+        "source": "free-exercise-db",
+        "id": "Walking_Treadmill",
+        "terms": [],
+        "files": [
+            "/media/marche-tapis-0.webp",
+            "/media/marche-tapis-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "mobilite": {
+        "source": "free-exercise-db",
+        "id": "Arm_Circles",
+        "terms": [
+            "arm circles",
+            "hip circles",
+            "cat cow"
+        ],
+        "files": [
+            "/media/mobilite-0.webp",
+            "/media/mobilite-1.webp"
+        ],
+        "video": null,
+        "note": "Illustre seulement les cercles de bras",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "squat-a-vide": {
+        "source": "free-exercise-db",
+        "id": "Bodyweight_Squat",
+        "terms": [
+            "bodyweight squat"
+        ],
+        "files": [
+            "/media/squat-a-vide-0.webp",
+            "/media/squat-a-vide-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "squat-banc": {
+        "source": "free-exercise-db",
+        "id": "Box_Squat",
+        "terms": [
+            "box squat",
+            "bench squat"
+        ],
+        "files": [
+            "/media/squat-banc-0.webp",
+            "/media/squat-banc-1.webp"
+        ],
+        "video": null,
+        "note": "Visuel approchant : squat sur caisse avec barre",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "squat-gobelet": {
+        "source": "free-exercise-db",
+        "id": "Goblet_Squat",
+        "terms": [
+            "goblet squat"
+        ],
+        "files": [
+            "/media/squat-gobelet-0.webp",
+            "/media/squat-gobelet-1.webp"
+        ],
+        "video": "/media/squat-gobelet.mp4",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db",
+        "poster": "/media/squat-gobelet-poster.webp",
+        "video_source": "Vidéo générée avec Gemini (Google), validée par l'utilisateur le 2026-11-25"
+    },
+    "rowing-barre": {
+        "source": "free-exercise-db",
+        "id": "Bent_Over_Barbell_Row",
+        "terms": [
+            "bent over barbell row"
+        ],
+        "files": [
+            "/media/rowing-barre-0.webp",
+            "/media/rowing-barre-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "souleve-de-terre-jambes-tendues": {
+        "source": "free-exercise-db",
+        "id": "Stiff-Legged_Barbell_Deadlift",
+        "terms": [
+            "stiff-legged deadlift",
+            "romanian deadlift"
+        ],
+        "files": [
+            "/media/souleve-de-terre-jambes-tendues-0.webp",
+            "/media/souleve-de-terre-jambes-tendues-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "fentes-arriere": {
+        "source": "free-exercise-db",
+        "id": "Dumbbell_Rear_Lunge",
+        "terms": [
+            "rear lunge",
+            "reverse lunge"
+        ],
+        "files": [
+            "/media/fentes-arriere-0.webp",
+            "/media/fentes-arriere-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "releves-jambes-banc": {
+        "source": "free-exercise-db",
+        "id": "Flat_Bench_Lying_Leg_Raise",
+        "terms": [
+            "flat bench leg raise",
+            "lying leg raise"
+        ],
+        "files": [
+            "/media/releves-jambes-banc-0.webp",
+            "/media/releves-jambes-banc-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "planche": {
+        "source": "free-exercise-db",
+        "id": "Plank",
+        "terms": [
+            "plank"
+        ],
+        "files": [
+            "/media/planche-0.webp",
+            "/media/planche-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "rotations-russes": {
+        "source": "free-exercise-db",
+        "id": "Russian_Twist",
+        "terms": [
+            "russian twist"
+        ],
+        "files": [
+            "/media/rotations-russes-0.webp",
+            "/media/rotations-russes-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "kettlebell-swing": {
+        "source": "free-exercise-db",
+        "id": "One-Arm_Kettlebell_Swings",
+        "terms": [
+            "kettlebell swing"
+        ],
+        "files": [
+            "/media/kettlebell-swing-0.webp",
+            "/media/kettlebell-swing-1.webp"
+        ],
+        "video": null,
+        "note": "Visuel approchant : swing à un bras",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "marche-inclinee": {
+        "source": "free-exercise-db",
+        "id": "Walking_Treadmill",
+        "terms": [],
+        "files": [
+            "/media/marche-inclinee-0.webp",
+            "/media/marche-inclinee-1.webp"
+        ],
+        "video": null,
+        "note": "Visuel approchant : marche sans pente",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "marche-fermier": {
+        "source": "free-exercise-db",
+        "id": "Farmers_Walk",
+        "terms": [
+            "suitcase carry",
+            "farmer's walk"
+        ],
+        "files": [
+            "/media/marche-fermier-0.webp",
+            "/media/marche-fermier-1.webp"
+        ],
+        "video": null,
+        "note": "Visuel approchant : charge des deux côtés",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "dead-bug": {
+        "source": "free-exercise-db",
+        "id": "Dead_Bug",
+        "terms": [
+            "dead bug"
+        ],
+        "files": [
+            "/media/dead-bug-0.webp",
+            "/media/dead-bug-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "hollow-hold": {
+        "source": null,
+        "id": null,
+        "terms": [
+            "hollow hold",
+            "hollow body"
+        ],
+        "files": [],
+        "video": null,
+        "note": "Absent de free-exercise-db : à chercher sur wger ou à filmer"
+    },
+    "developpe-couche": {
+        "source": "free-exercise-db",
+        "id": "Barbell_Bench_Press_-_Medium_Grip",
+        "terms": [
+            "barbell bench press"
+        ],
+        "files": [
+            "/media/developpe-couche-0.webp",
+            "/media/developpe-couche-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "rowing-kettlebell-banc": {
+        "source": "free-exercise-db",
+        "id": "One-Arm_Kettlebell_Row",
+        "terms": [
+            "one arm kettlebell row",
+            "one arm dumbbell row"
+        ],
+        "files": [
+            "/media/rowing-kettlebell-banc-0.webp",
+            "/media/rowing-kettlebell-banc-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "crunch-banc": {
+        "source": "free-exercise-db",
+        "id": "Crunches",
+        "terms": [
+            "crunch",
+            "decline crunch"
+        ],
+        "files": [
+            "/media/crunch-banc-0.webp",
+            "/media/crunch-banc-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "mountain-climbers": {
+        "source": "free-exercise-db",
+        "id": "Mountain_Climbers",
+        "terms": [
+            "mountain climbers"
+        ],
+        "files": [
+            "/media/mountain-climbers-0.webp",
+            "/media/mountain-climbers-1.webp"
+        ],
+        "video": null,
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    },
+    "etirements": {
+        "source": "free-exercise-db",
+        "id": "Kneeling_Hip_Flexor",
+        "terms": [
+            "hip flexor stretch",
+            "child's pose",
+            "cat stretch"
+        ],
+        "files": [
+            "/media/etirements-0.webp",
+            "/media/etirements-1.webp"
+        ],
+        "video": null,
+        "note": "Illustre seulement l'étirement des hanches",
+        "license": "Unlicense (domaine public)",
+        "attribution": "free-exercise-db"
+    }
 }

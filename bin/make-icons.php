@@ -18,8 +18,8 @@ function icon(int $size, float $scale, bool $rounded): GdImage
     imagesavealpha($im, true);
     imagealphablending($im, true);
     $transparent = imagecolorallocatealpha($im, 0, 0, 0, 127);
-    $bg = imagecolorallocate($im, 0x0f, 0x14, 0x19);
-    $green = imagecolorallocate($im, 0x4a, 0xde, 0x80);
+    $bg = imagecolorallocate($im, 0x0b, 0x0b, 0x0d);
+    $green = imagecolorallocate($im, 0xe5, 0x30, 0x3c); // rouge d'accent
     imagefill($im, 0, 0, $transparent);
 
     if ($rounded) {

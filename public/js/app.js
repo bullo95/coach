@@ -1,57 +1,19 @@
-// Coach — application (lot 1 : connexion, accueil, programme, bibliothèque d'exercices).
+// Coach — application : connexion, accueil, programme, bibliothèque, mode séance, historique.
 import { api, ApiError } from './api.js';
+import { flush, pendingCount } from './queue.js';
+import { html, render as baseRender, exerciseVisual, formatSeconds, formatTarget, longDate, num, preloadMedia } from './ui.js';
+import { loadPushups, pushupsCard, pushupsPlanPage, pushupsTracking } from './pushups.js';
+import { closeStale, loadActive, screenActive, screenEnd, startWorkout, stopRunner } from './workout.js';
 
 const main = document.getElementById('main');
-const tabbar = document.getElementById('tabbar');
 const state = { me: null, program: null, exercises: null };
 
-const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 const BLOCK_TYPES = {
   warmup: 'Échauffement', circuit: 'Circuit', sets: 'Séries', interval: 'Fractionné', amrap: 'AMRAP', cooldown: 'Retour au calme',
 };
+const EFFORT = ['Facile', 'Modéré', 'Soutenu', 'Difficile', 'Épuisant'];
 
-// Échappement HTML : toute donnée insérée dans le DOM passe par cette balise de gabarit.
-const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-class Safe { constructor(value) { this.value = value; } }
-const raw = (v) => new Safe(v);
-const part = (v) => (v instanceof Safe ? v.value : esc(v));
-// Gabarit : renvoie du HTML sûr ; les valeurs sont échappées sauf si elles viennent d'un autre gabarit.
-const html = (strings, ...values) => new Safe(strings.reduce((out, s, i) => {
-  const v = values[i - 1];
-  return out + (Array.isArray(v) ? v.map(part).join('') : part(v)) + s;
-}));
-
-function render(content, { title, tab } = {}) {
-  main.innerHTML = content.value;
-  document.title = title ? `${title} · Coach` : 'Coach';
-  tabbar.hidden = !state.me;
-  for (const a of tabbar.querySelectorAll('a')) {
-    if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page');
-    else a.removeAttribute('aria-current');
-  }
-  window.scrollTo(0, 0);
-  main.focus({ preventScroll: true });
-}
-
-// --- Formatage -----------------------------------------------------------------
-
-function formatSeconds(s) {
-  if (s < 60) return `${s} s`;
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return r ? `${m} min ${r} s` : `${m} min`;
-}
-
-function formatTarget(item) {
-  let t;
-  if (item.target_reps != null) {
-    t = item.target_reps_max ? `${item.target_reps} à ${item.target_reps_max} rép.` : `${item.target_reps} rép.`;
-  } else {
-    t = item.target_seconds_max ? `${item.target_seconds} à ${item.target_seconds_max} s` : formatSeconds(item.target_seconds);
-  }
-  if (item.per_side) t += ' par côté';
-  return t;
-}
+const render = (content, opts = {}) => baseRender(content, { showTabs: !!state.me, ...opts });
 
 function formatBlockMeta(block) {
   const parts = [];
@@ -62,20 +24,23 @@ function formatBlockMeta(block) {
   return parts.join(' · ');
 }
 
-function initials(name) {
-  return name.split(/[\s-]+/).filter((w) => w.length > 2).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
+/** Charge tout ce qu'une séance demande ; le service worker en garde une copie pour le hors-ligne. */
+async function loadWorkoutData() {
+  const [program, exercises] = await Promise.all([
+    state.program ?? api.program(),
+    state.exercises ?? api.exercises(),
+  ]);
+  if (!state.exercises) preloadMedia(exercises);
+  state.program = program;
+  state.exercises = exercises;
+  return { program, exercises, me: state.me };
 }
 
-// Prochain jour de séance d'après les réglages (rotation A/B/C calculée au lot 2).
-function nextSessionDay(sessionDays) {
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const iso = d.getDay() === 0 ? 7 : d.getDay();
-    if (sessionDays.includes(iso)) return { offset: i, name: DAYS[d.getDay()] };
-  }
-  return null;
+async function begin(code) {
+  const { program } = await loadWorkoutData();
+  const template = program.find((t) => t.code === code);
+  const loads = await api.loads().catch(() => ({}));
+  await startWorkout(template, loads);
 }
 
 // --- Écrans --------------------------------------------------------------------
@@ -95,10 +60,10 @@ function screenLogin(error = '') {
 
   document.getElementById('login').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button');
-    btn.disabled = true;
+    e.target.querySelector('button').disabled = true;
     try {
       state.me = await api.login(e.target.email.value, e.target.password.value);
+      flush();
       location.hash = '#/';
       route();
     } catch (err) {
@@ -107,31 +72,61 @@ function screenLogin(error = '') {
   });
 }
 
-function screenHome() {
+async function screenHome() {
+  await closeStale();
   const s = state.me.settings;
-  const next = nextSessionDay(s.session_days);
-  const pushTarget = s.pushups_sets * s.pushups_reps_per_set;
-  const sessionLine = !next ? 'Aucun jour de séance réglé.'
-    : next.offset === 0 ? 'Aujourd\'hui est un jour de séance.'
-      : `Prochaine séance : ${next.name}.`;
+  const [today, pending] = await Promise.all([
+    api.today().catch(() => null),
+    pendingCount().catch(() => 0),
+    loadWorkoutData().catch(() => null), // prépare le cache hors ligne de la séance
+    loadPushups(),
+  ]);
+  api.loads().catch(() => {});
+  const active = loadActive();
+  const flash = sessionStorage.getItem('coach.flash');
+  sessionStorage.removeItem('coach.flash');
+  const tpl = (code) => state.program?.find((t) => t.code === code);
+
+  let session;
+  if (active) {
+    session = html`<p><strong>Séance ${active.code} en cours.</strong></p>
+      <a class="btn block" href="${active.phase === 'end' ? '#/fin-de-seance' : '#/seance-en-cours'}">${active.phase === 'end' ? 'Terminer le bilan' : 'Reprendre la séance'}</a>`;
+  } else if (!today) {
+    session = html`<p class="muted">Hors ligne : planning indisponible. Tu peux lancer une séance depuis l'onglet Séances.</p>`;
+  } else if (today.done_today) {
+    session = html`<p><strong>Séance faite aujourd'hui.</strong></p>
+      <p class="muted">Prochaine : ${today.next_session_date ? longDate(today.next_session_date) : '—'}, séance ${today.next_template}.</p>`;
+  } else if (today.proposed_today) {
+    const t = tpl(today.next_template);
+    session = html`<p><strong>Aujourd'hui : séance ${today.next_template}</strong>${t ? ` — ${t.name}` : ''}</p>
+      <p class="muted">${t ? `${t.est_duration_min} min` : ''}</p>
+      <p><button class="btn block" type="button" data-start="${today.next_template}">Démarrer la séance</button></p>
+      <div class="stack">
+        <a class="btn secondary block" href="#/seances/${today.next_template}">Voir l'aperçu</a>
+        ${today.can_joker ? html`<button class="btn secondary block" type="button" data-session-joker="use">Sauter avec un joker (${today.jokers_left} restant${today.jokers_left > 1 ? 's' : ''})</button>` : ''}
+      </div>`;
+  } else if (today.skipped_today) {
+    session = html`<p><strong>Séance sautée avec un joker.</strong></p>
+      <p class="muted">Elle reste la prochaine : ${today.next_session_date ? longDate(today.next_session_date) : '—'}, séance ${today.next_template}.</p>
+      <button class="btn secondary block" type="button" data-session-joker="cancel">Annuler le joker</button>`;
+  } else {
+    session = html`<p><strong>Repos aujourd'hui.</strong>${today.rest_reason === 'seance_hier' ? ' Séance faite hier : pas deux jours de suite.' : ''}</p>
+      <p class="muted">Prochaine séance : ${today.next_session_date ? longDate(today.next_session_date) : '—'}, séance ${today.next_template}.</p>`;
+  }
 
   render(html`
     <h1>Bonjour</h1>
+    ${flash ? html`<p class="flash-msg" role="status">${flash}</p>` : ''}
     <section class="card" aria-labelledby="h-seance">
       <h2 id="h-seance">Séance</h2>
-      <p>${sessionLine}</p>
-      <p class="muted">Le mode séance guidé arrive au lot 2. En attendant, consulte le programme.</p>
-      <a class="btn secondary" href="#/seances">Voir le programme</a>
+      ${session}
+      ${today ? html`<p class="week">Cette semaine : <strong>${today.week.done} / ${today.week.planned}</strong> séances${today.week.jokers ? ` · ${today.week.jokers} joker${today.week.jokers > 1 ? 's' : ''}` : ''}</p>` : ''}
     </section>
-    <section class="card" aria-labelledby="h-pompes">
-      <h2 id="h-pompes">Pompes du jour</h2>
-      <p>Objectif : ${s.pushups_sets} séries de ${s.pushups_reps_per_set}, soit ${pushTarget} pompes.</p>
-      <div class="gauge" role="img" aria-label="0 sur ${pushTarget} pompes"><span style="width:0%"></span></div>
-      <p class="muted">0 / ${s.pushups_sets} séries · compteur, objectifs et jokers au lot 4.</p>
-    </section>
+    ${pending ? html`<p class="muted" role="status">${pending} saisie${pending > 1 ? 's' : ''} en attente d'envoi : elles partiront au retour du réseau.</p>` : ''}
+    ${pushupsCard()}
     <section class="card" aria-labelledby="h-prot">
       <h2 id="h-prot">Protéines du jour</h2>
-      <p class="muted">Calcul de l'objectif (${String(s.protein_coef).replace('.', ',')} g/kg) et suivi au lot 4.</p>
+      <p class="muted">Calcul de l'objectif (${num(s.protein_coef)} g/kg) et suivi au lot 4.</p>
     </section>`, { title: 'Accueil', tab: 'accueil' });
 }
 
@@ -153,22 +148,34 @@ async function screenTemplate(code) {
   state.program ??= await api.program();
   const t = state.program.find((x) => x.code === code);
   if (!t) return screenNotFound();
+  const loads = await api.loads().catch(() => ({}));
+  const active = loadActive();
+  const hasInterval = t.blocks.some((b) => b.type === 'interval');
+  const loadText = (i) => {
+    const kg = loads[i.id];
+    if (kg != null && /barre|charge légère/i.test(i.load_label ?? '')) return `Barre : ${num(kg)} kg (dernière séance)`;
+    if (kg != null && i.load_kg != null && kg !== i.load_kg) return `${num(kg)} kg (dernière séance)`;
+    return i.load_label;
+  };
   render(html`
     <a class="back" href="#/seances">‹ Séances</a>
     <h1>Séance ${t.code} — ${t.name}</h1>
     <p class="muted">Durée prévue : ${t.est_duration_min} min</p>
+    ${hasInterval ? html`<p class="notice">Avant de commencer le fractionné, demande l'avis de ton médecin si ce n'est pas déjà fait.</p>` : ''}
+    ${active
+      ? html`<p><a class="btn block" href="#/seance-en-cours">Reprendre la séance ${active.code} en cours</a></p>`
+      : html`<p><button class="btn block" type="button" data-start="${t.code}">Démarrer</button></p>`}
     ${t.blocks.map((b) => html`
       <section class="card">
         <div class="block-head"><h2>${b.name}</h2><span class="tag">${BLOCK_TYPES[b.type] ?? b.type}</span></div>
         <p class="muted">${formatBlockMeta(b)}</p>
         <ul class="list">
           ${b.items.map((i) => html`<li><a href="#/exercices/${i.exercise.slug}">
-            <span>${i.exercise.name}${i.load_label ? raw(`<br><span class="muted">${esc(i.load_label)}</span>`) : ''}</span>
+            <span>${i.exercise.name}${loadText(i) ? html`<br><span class="muted">${loadText(i)}</span>` : ''}</span>
             <span class="item-target">${formatTarget(i)}</span>
           </a></li>`)}
         </ul>
-      </section>`)}
-    <p><button class="btn block" type="button" disabled>Démarrer (lot 2)</button></p>`,
+      </section>`)}`,
   { title: `Séance ${t.code}`, tab: 'seances' });
 }
 
@@ -179,21 +186,16 @@ async function screenLibrary() {
     <h1>Bibliothèque</h1>
     <ul class="list card">
       ${state.exercises.map((e) => html`<li><a href="#/exercices/${e.slug}">
-        <span>${e.name_fr}<br><span class="muted">${e.muscles ?? ''}</span></span></a></li>`)}
+        ${e.media_paths.length && e.media_type !== 'placeholder' ? html`<img class="thumb" src="${e.media_type === 'video' ? e.media_paths[1] : e.media_paths[0]}" alt="" loading="lazy" width="64" height="48">` : html`<span class="thumb" aria-hidden="true"></span>`}
+        <span class="grow">${e.name_fr}<br><span class="muted">${e.muscles ?? ''}</span></span></a></li>`)}
     </ul>`, { title: 'Bibliothèque', tab: 'seances' });
 }
 
 async function screenExercise(slug) {
-  let e;
-  try {
-    e = await api.exercise(slug);
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) return screenNotFound();
-    throw err;
-  }
-  const visual = e.media_type === 'images' && e.media_paths.length
-    ? html`<img class="visual" src="${e.media_paths[0]}" alt="${e.name_fr}, position de départ">`
-    : html`<div class="visual" role="img" aria-label="Visuel à venir pour ${e.name_fr}"><div><strong>${initials(e.name_fr)}</strong>Visuel à venir (lot 3)</div></div>`;
+  state.exercises ??= await api.exercises();
+  const e = state.exercises.find((x) => x.slug === slug);
+  if (!e) return screenNotFound();
+  const visual = exerciseVisual(e);
   const variant = e.easier_variant
     ? html`<a href="#/exercices/${e.easier_variant.slug}">${e.easier_variant.name}</a>`
     : html`${e.easier_variant_text ?? '—'}`;
@@ -211,8 +213,59 @@ async function screenExercise(slug) {
       <h3>Variante plus facile</h3>
       <p>${variant}</p>
     </section>
-    ${e.attribution ? html`<p class="muted">Visuel : ${e.attribution} (${e.license ?? ''})</p>` : ''}`,
+    ${e.attribution ? html`<p class="muted">Visuel : ${e.attribution}${e.license ? ` (${e.license})` : ''}</p>` : ''}`,
   { title: e.name_fr, tab: 'seances' });
+}
+
+async function screenTracking() {
+  const pushups = await pushupsTracking();
+  let sessions;
+  try {
+    sessions = await api.sessions();
+  } catch (err) {
+    if (err instanceof ApiError && err.status !== 0 && err.status !== 503) throw err;
+    sessions = null;
+  }
+  render(html`
+    <h1>Suivi</h1>
+    <h2>Historique des séances</h2>
+    ${sessions === null ? html`<p class="muted">Hors ligne : historique indisponible.</p>`
+      : !sessions.length ? html`<section class="card"><p class="muted">Aucune séance pour l'instant.</p></section>`
+        : html`<ul class="list card">${sessions.map((x) => html`<li><a href="#/suivi/seances/${x.id}">
+          <span><strong>Séance ${x.code}</strong> — ${longDate(x.planned_date)}<br>
+          <span class="muted">${x.joker ? 'Sautée avec un joker' : `${x.status === 'in_progress' ? 'En cours' : `${x.duration_min ?? '—'} min`} · ${x.sets_count} séries${x.pain_flag ? ' · douleur signalée' : ''}`}</span></span>
+        </a></li>`)}</ul>`}
+    ${pushups}
+    <section class="card"><p class="muted">Poids, tour de taille et protéines : au lot 4.</p></section>`,
+  { title: 'Suivi', tab: 'suivi' });
+}
+
+async function screenSessionDetail(id) {
+  let x;
+  try {
+    x = await api.session(id);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return screenNotFound();
+    throw err;
+  }
+  const setText = (set, perSide) => {
+    const what = set.reps != null ? `${set.reps} rép.${perSide ? ' par côté' : ''}` : formatSeconds(set.seconds ?? 0);
+    return set.load_kg != null ? `${what} · ${num(set.load_kg)} kg` : what;
+  };
+  render(html`
+    <a class="back" href="#/suivi">‹ Suivi</a>
+    <h1>Séance ${x.code} — ${longDate(x.planned_date)}</h1>
+    <section class="card">
+      <p>${x.name} · ${x.joker ? 'sautée avec un joker' : x.status === 'in_progress' ? 'en cours' : `${x.duration_min ?? '—'} min`}${x.rounds_done != null ? ` · ${x.rounds_done} tours en AMRAP` : ''}</p>
+      <p>Ressenti : ${x.effort_1_5 ? `${x.effort_1_5} / 5 (${EFFORT[x.effort_1_5 - 1]})` : 'non renseigné'}${x.pain_flag ? ' · douleur signalée' : ''}</p>
+      ${x.note ? html`<p class="muted">« ${x.note} »</p>` : ''}
+    </section>
+    ${x.exercises.map((ex) => html`<section class="card">
+      <h2>${ex.exercise}</h2>
+      <ul class="list">${ex.sets.map((set) => html`<li><span class="row"><span class="muted">Tour ${set.round}</span><span>${setText(set, ex.per_side)}</span></span></li>`)}</ul>
+    </section>`)}
+    ${!x.exercises.length ? html`<p class="muted">Aucune série enregistrée.</p>` : ''}`,
+  { title: `Séance ${x.code}`, tab: 'suivi' });
 }
 
 function screenPlaceholder(title, tab, lot) {
@@ -228,9 +281,11 @@ function screenSettings() {
       <p>${u.email}<br><span class="muted">Fuseau : ${u.timezone}</span></p>
       <button class="btn secondary" type="button" id="logout">Se déconnecter</button>
     </section>
-    <section class="card"><p class="muted">Jours, rappels, pompes et protéines : réglables aux lots suivants.</p></section>`,
+    <ul class="list card"><li><a href="#/pompes"><span>Mon programme de pompes<br><span class="muted">Pompes par série, séries, objectif, conseils du coach</span></span></a></li></ul>
+    <section class="card"><p class="muted">Jours de séance, rappels et protéines : réglables aux lots suivants.</p></section>`,
   { title: 'Réglages', tab: 'reglages' });
   document.getElementById('logout').addEventListener('click', async () => {
+    await flush();
     await api.logout().catch(() => {});
     // Retire du cache hors ligne les réponses liées au compte.
     if ('caches' in window) {
@@ -264,15 +319,20 @@ const routes = [
   [/^\/$/, screenHome],
   [/^\/seances$/, screenSessions],
   [/^\/seances\/([A-Z])$/, screenTemplate],
+  [/^\/seance-en-cours$/, async () => screenActive(await loadWorkoutData())],
+  [/^\/fin-de-seance$/, screenEnd],
   [/^\/exercices$/, screenLibrary],
   [/^\/exercices\/([\w-]+)$/, screenExercise],
+  [/^\/pompes$/, async () => render(await pushupsPlanPage(), { title: 'Mon programme de pompes', tab: 'accueil' })],
   [/^\/proteines$/, () => screenPlaceholder('Protéines', 'proteines', 4)],
-  [/^\/suivi$/, () => screenPlaceholder('Suivi', 'suivi', '2 et 4')],
+  [/^\/suivi$/, screenTracking],
+  [/^\/suivi\/seances\/(\d+)$/, screenSessionDetail],
   [/^\/reglages$/, screenSettings],
 ];
 
 async function route() {
   const path = location.hash.replace(/^#/, '') || '/';
+  if (path !== '/seance-en-cours') stopRunner();
   try {
     if (!state.me) {
       try {
@@ -293,8 +353,26 @@ async function route() {
 }
 
 // Actions génériques sans JavaScript inline (compatible avec la politique de sécurité du serveur).
-main.addEventListener('click', (e) => {
-  if (e.target.closest('[data-back]') && history.length > 1) {
+main.addEventListener('click', async (e) => {
+  const start = e.target.closest('[data-start]');
+  const sessionJoker = e.target.closest('[data-session-joker]');
+  if (sessionJoker) {
+    const use = sessionJoker.dataset.sessionJoker === 'use';
+    if (use && !confirm('Sauter la séance d\'aujourd\'hui avec un joker ? Le quota du mois est commun avec les pompes.')) return;
+    try {
+      await (use ? api.sessionJoker() : api.sessionJokerCancel());
+      await route();
+    } catch (err) {
+      screenError(err);
+    }
+  } else if (start) {
+    start.disabled = true;
+    try {
+      await begin(start.dataset.start);
+    } catch (err) {
+      screenError(err);
+    }
+  } else if (e.target.closest('[data-back]') && history.length > 1) {
     e.preventDefault();
     history.back();
   } else if (e.target.closest('[data-reload]')) {
@@ -304,6 +382,7 @@ main.addEventListener('click', (e) => {
 
 window.addEventListener('hashchange', route);
 route();
+flush();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch((err) => console.warn('Service worker non enregistré', err));

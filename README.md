@@ -23,6 +23,7 @@ composer serve            # http://localhost:8010
 | `php bin/migrate.php` | Applique les fichiers `migrations/*.sql` pas encore passés |
 | `php bin/seed.php` | Recharge la bibliothèque et le programme depuis `data/*.json`, sans toucher à l'historique |
 | `php bin/create-user.php email [fuseau]` | Crée le compte unique |
+| `php bin/media-import.php` | Télécharge les visuels listés dans `data/exercise_media.json`, les convertit en WebP dans `public/media/` (relancer le seed ensuite) |
 | `php bin/make-icons.php` | Régénère les icônes de la PWA |
 | `composer test` | Tests PHPUnit |
 
@@ -46,4 +47,4 @@ les renommer revient à supprimer un élément et en créer un autre. Un éléme
 ## Mise en production
 
 Voir [deploy/INSTALL-VM.md](deploy/INSTALL-VM.md), puis `deploy/deploy.sh` à chaque mise à jour.
-Après une modification de `public/css`, `public/js` ou `index.html`, incrémenter `VERSION` dans `public/sw.js`.
+Si la liste des fichiers de l'app change (nouveau fichier JS ou CSS), l'ajouter à `SHELL` et incrémenter `VERSION` dans `public/sw.js`.
