@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Coach</title>
+  <meta name="description" content="Suivi des séances, des pompes et des protéines">
+  <meta name="theme-color" content="#0f1419">
+  <meta name="color-scheme" content="dark light">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Coach">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Aller au contenu</a>
+  <main id="main" tabindex="-1" aria-live="polite">
+    <p class="loading">Chargement…</p>
+  </main>
+  <nav class="tabbar" id="tabbar" aria-label="Navigation principale" hidden>
+    <a href="#/" data-tab="accueil">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      <span>Accueil</span>
+    </a>
+    <a href="#/seances" data-tab="seances">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 10h3v4H2zM19 10h3v4h-3zM5 7h3v10H5zM16 7h3v10h-3zM8 11h8v2H8z"/></svg>
+      <span>Séances</span>
+    </a>
+    <a href="#/proteines" data-tab="proteines">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3c4 0 7 4 7 9s-3 9-7 9-7-4-7-9 3-9 7-9zm0 3c-2 0-4 3-4 6s2 6 4 6 4-3 4-6-2-6-4-6z"/></svg>
+      <span>Protéines</span>
+    </a>
+    <a href="#/suivi" data-tab="suivi">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 20h18v-2H3zM5 16h3V9H5zm5 0h3V4h-3zm5 0h3v-5h-3z"/></svg>
+      <span>Suivi</span>
+    </a>
+    <a href="#/reglages" data-tab="reglages">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+      <span>Réglages</span>
+    </a>
+  </nav>
+</body>
+</html>

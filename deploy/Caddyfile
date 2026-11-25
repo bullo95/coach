@@ -1,0 +1,28 @@
+# /etc/caddy/Caddyfile — remplacer coach.example.fr par le sous-domaine réel.
+coach.example.fr {
+	root * /srv/coach/public
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'"
+		-Server
+	}
+
+	# Le service worker et la coquille doivent toujours être revalidés.
+	@nocache path /sw.js /index.html /manifest.webmanifest
+	header @nocache Cache-Control "no-cache"
+
+	@assets path /css/* /js/* /icons/* /media/*
+	header @assets Cache-Control "public, max-age=604800"
+
+	# Fichiers cachés (.env, .git…) jamais servis.
+	@hidden path */.*
+	respond @hidden 404
+
+	php_fastcgi unix//run/php/php8.4-fpm-coach.sock
+	file_server
+}

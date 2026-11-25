@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "coach",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "localhost:8010", "-t", "public", "public/index.php"],
+      "port": 8010,
+      "autoPort": false
+    }
+  ]
+}

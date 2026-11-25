@@ -1,0 +1,104 @@
+{
+  "_doc": "Programme A/B/C. Les clés « ref » sont stables : ne pas les renommer, sinon le seed crée un nouvel élément. Recharger avec : php bin/seed.php",
+  "templates": [
+    {
+      "code": "A",
+      "name": "Force + abdos",
+      "est_duration_min": 30,
+      "blocks": [
+        {
+          "ref": "A-echauffement", "name": "Échauffement", "type": "warmup", "rounds": 1, "duration_s": 300,
+          "items": [
+            { "ref": "A-echauffement-marche", "exercise": "marche-tapis", "target_seconds": 150, "load_label": "Marche rapide" },
+            { "ref": "A-echauffement-mobilite", "exercise": "mobilite", "target_seconds": 90 },
+            { "ref": "A-echauffement-squat", "exercise": "squat-a-vide", "target_seconds": 60 }
+          ]
+        },
+        {
+          "ref": "A-circuit-force", "name": "Circuit force", "type": "circuit", "rounds": 3, "rest_between_rounds_s": 60,
+          "items": [
+            { "ref": "A-force-squat-gobelet", "exercise": "squat-gobelet", "target_reps": 12, "load_kg": 12, "load_label": "Kettlebell 12 kg" },
+            { "ref": "A-force-rowing-barre", "exercise": "rowing-barre", "target_reps": 10, "load_label": "Barre, charge à régler" },
+            { "ref": "A-force-sdt", "exercise": "souleve-de-terre-jambes-tendues", "target_reps": 10, "load_label": "Barre, charge à régler" },
+            { "ref": "A-force-fentes", "exercise": "fentes-arriere", "target_reps": 8, "per_side": true, "load_kg": 5, "load_label": "2 × 5 kg" }
+          ]
+        },
+        {
+          "ref": "A-abdos", "name": "Abdos", "type": "circuit", "rounds": 3, "rest_between_rounds_s": 45,
+          "items": [
+            { "ref": "A-abdos-releves", "exercise": "releves-jambes-banc", "target_reps": 12 },
+            { "ref": "A-abdos-planche", "exercise": "planche", "target_seconds": 40 },
+            { "ref": "A-abdos-rotations", "exercise": "rotations-russes", "target_reps": 20, "load_kg": 5, "load_label": "5 kg, 20 au total" }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "B",
+      "name": "Cardio + gainage",
+      "est_duration_min": 30,
+      "blocks": [
+        {
+          "ref": "B-echauffement", "name": "Échauffement", "type": "warmup", "rounds": 1, "duration_s": 300,
+          "items": [
+            { "ref": "B-echauffement-marche", "exercise": "marche-tapis", "target_seconds": 210 },
+            { "ref": "B-echauffement-mobilite", "exercise": "mobilite", "target_seconds": 90 }
+          ]
+        },
+        {
+          "ref": "B-swings", "name": "Swings", "type": "sets", "rounds": 6, "rest_between_rounds_s": 45,
+          "items": [
+            { "ref": "B-swings-swing", "exercise": "kettlebell-swing", "target_reps": 15, "load_kg": 10, "load_label": "10 kg, puis 12 kg à partir de la semaine active 3" }
+          ]
+        },
+        {
+          "ref": "B-fractionne", "name": "Fractionné", "type": "interval", "rounds": 8,
+          "items": [
+            { "ref": "B-fractionne-rapide", "exercise": "marche-inclinee", "target_seconds": 45, "load_label": "Rapide (pente 10 à 15 %)" },
+            { "ref": "B-fractionne-lente", "exercise": "marche-inclinee", "target_seconds": 45, "load_label": "Lente (même pente)" }
+          ]
+        },
+        {
+          "ref": "B-abdos", "name": "Abdos", "type": "circuit", "rounds": 2, "rest_between_rounds_s": 45,
+          "items": [
+            { "ref": "B-abdos-fermier", "exercise": "marche-fermier", "target_seconds": 30, "per_side": true, "load_kg": 12, "load_label": "Kettlebell 12 kg" },
+            { "ref": "B-abdos-dead-bug", "exercise": "dead-bug", "target_reps": 10, "per_side": true },
+            { "ref": "B-abdos-hollow", "exercise": "hollow-hold", "target_seconds": 20, "target_seconds_max": 30 }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "C",
+      "name": "Full body",
+      "est_duration_min": 30,
+      "blocks": [
+        {
+          "ref": "C-echauffement", "name": "Échauffement", "type": "warmup", "rounds": 1, "duration_s": 300,
+          "items": [
+            { "ref": "C-echauffement-marche", "exercise": "marche-tapis", "target_seconds": 210 },
+            { "ref": "C-echauffement-mobilite", "exercise": "mobilite", "target_seconds": 90 }
+          ]
+        },
+        {
+          "ref": "C-amrap", "name": "Circuit AMRAP 20 min", "type": "amrap", "rounds": 1, "duration_s": 1200,
+          "items": [
+            { "ref": "C-amrap-swing", "exercise": "kettlebell-swing", "target_reps": 10, "load_kg": 12, "load_label": "Kettlebell 12 kg" },
+            { "ref": "C-amrap-squat-gobelet", "exercise": "squat-gobelet", "target_reps": 10, "load_kg": 12, "load_label": "Kettlebell 12 kg" },
+            { "ref": "C-amrap-developpe", "exercise": "developpe-couche", "target_reps": 8, "load_label": "Charge légère" },
+            { "ref": "C-amrap-rowing-kb", "exercise": "rowing-kettlebell-banc", "target_reps": 10, "per_side": true, "load_kg": 10, "load_label": "Kettlebell 10 kg" },
+            { "ref": "C-amrap-crunch", "exercise": "crunch-banc", "target_reps": 10 },
+            { "ref": "C-amrap-mountain", "exercise": "mountain-climbers", "target_seconds": 30 }
+          ]
+        },
+        {
+          "ref": "C-retour-calme", "name": "Retour au calme", "type": "cooldown", "rounds": 1, "duration_s": 300,
+          "items": [
+            { "ref": "C-calme-marche", "exercise": "marche-tapis", "target_seconds": 150, "load_label": "Marche lente" },
+            { "ref": "C-calme-etirements", "exercise": "etirements", "target_seconds": 150 }
+          ]
+        }
+      ]
+    }
+  ]
+}

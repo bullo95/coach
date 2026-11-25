@@ -1,0 +1,42 @@
+{
+  "_doc": "Messages d'encouragement des pompes. Variables : {sets_done} {sets_target} {reps_per_set} {done} {target} {remaining_sets} {streak} {record} {jokers} {hours_left}. Un message n'est jamais tiré deux fois de suite.",
+  "after_set": [
+    "{sets_done} / {sets_target}. Une de plus que tout à l'heure.",
+    "Série {sets_done} faite. Continue comme ça.",
+    "{done} pompes au compteur aujourd'hui.",
+    "{sets_done} / {sets_target}. Régulier, c'est ce qui compte."
+  ],
+  "halfway": [
+    "La moitié est faite.",
+    "Mi-parcours : {done} pompes, il en reste autant."
+  ],
+  "last_set": [
+    "Plus qu'une série pour boucler la journée.",
+    "Dernière série et la journée est bouclée."
+  ],
+  "day_reached": [
+    "{done} pompes aujourd'hui. Journée bouclée.",
+    "Objectif du jour atteint : {sets_target} séries de {reps_per_set}.",
+    "Journée bouclée. {streak} jours d'affilée."
+  ],
+  "streak_milestone": [
+    "{streak} jours d'affilée. C'est devenu une habitude.",
+    "Palier des {streak} jours atteint."
+  ],
+  "behind_evening": [
+    "Encore {remaining_sets} séries, il reste {hours_left} h avant la plage silencieuse.",
+    "{remaining_sets} séries à caser ce soir pour garder la série de jours."
+  ],
+  "joker_used": [
+    "Joker utilisé hier : la série continue, {jokers} jokers restants.",
+    "Un joker a couvert hier. Série de {streak} jours toujours en cours."
+  ],
+  "streak_broken": [
+    "Série terminée à {record} jours, ton record. On repart aujourd'hui.",
+    "Nouvelle série à partir d'aujourd'hui. Le record de {record} jours reste là."
+  ],
+  "new_record": [
+    "Nouveau record : {streak} jours d'affilée.",
+    "Record battu : {streak} jours."
+  ]
+}

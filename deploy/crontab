@@ -1,0 +1,9 @@
+# crontab de l'utilisateur coach (crontab -u coach deploy/crontab)
+SHELL=/bin/sh
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Lot 5 : rappels et clôture des journées de pompes, chaque minute.
+# * * * * * php /srv/coach/bin/reminders.php >> /srv/coach/var/log/reminders.log 2>&1
+
+# Sauvegarde quotidienne à 3 h 15.
+15 3 * * * /srv/coach/deploy/backup.sh >> /srv/coach/var/log/backup.log 2>&1

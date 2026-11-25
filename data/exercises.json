@@ -1,0 +1,191 @@
+[
+  {
+    "slug": "marche-tapis",
+    "name_fr": "Marche sur tapis",
+    "name_en": "treadmill walking",
+    "muscles": "Jambes, cœur (cardio)",
+    "cues": ["Ne pas se tenir aux barres", "Grands pas, talon puis pointe", "Respiration régulière, allure qui permet de parler"],
+    "mistake": "Se pendre aux poignées",
+    "easier_variant_text": "Vitesse plus lente, sans pente"
+  },
+  {
+    "slug": "mobilite",
+    "name_fr": "Mobilité articulaire",
+    "name_en": "joint mobility (arm circles, hip circles, cat cow)",
+    "muscles": "Épaules, hanches, colonne",
+    "cues": ["Cercles de bras lents, dans les deux sens", "Cercles de hanches, mains sur les hanches", "Dos rond puis dos creux à quatre pattes, en respirant"],
+    "mistake": "Aller trop vite ou forcer en fin d'amplitude",
+    "easier_variant_text": "Amplitude réduite, assis sur le banc pour les épaules"
+  },
+  {
+    "slug": "squat-a-vide",
+    "name_fr": "Squat à vide",
+    "name_en": "bodyweight squat",
+    "muscles": "Quadriceps, fessiers",
+    "cues": ["Pieds largeur d'épaules, pointes légèrement ouvertes", "Hanches vers l'arrière, poids sur les talons", "Buste fier, genoux dans l'axe des pieds"],
+    "mistake": "Talons qui décollent",
+    "easier_variant": "squat-banc"
+  },
+  {
+    "slug": "squat-banc",
+    "name_fr": "Squat sur le banc",
+    "name_en": "box squat, bench squat",
+    "muscles": "Quadriceps, fessiers",
+    "cues": ["Dos au banc, pieds largeur d'épaules", "S'asseoir en contrôlant la descente", "Se relever en poussant dans les talons, sans élan"],
+    "mistake": "Se laisser tomber sur le banc",
+    "easier_variant_text": "S'aider des mains sur les cuisses pour se relever"
+  },
+  {
+    "slug": "squat-gobelet",
+    "name_fr": "Squat gobelet",
+    "name_en": "goblet squat",
+    "muscles": "Quadriceps, fessiers, gainage",
+    "cues": ["Kettlebell contre la poitrine", "Pieds largeur d'épaules", "Descendre hanches sous les genoux si possible"],
+    "mistake": "Talons qui décollent",
+    "easier_variant": "squat-banc"
+  },
+  {
+    "slug": "rowing-barre",
+    "name_fr": "Rowing barre penché",
+    "name_en": "bent over barbell row",
+    "muscles": "Dos (grand dorsal, rhomboïdes), biceps",
+    "cues": ["Buste à 45°, dos plat", "Tirer la barre vers le nombril", "Serrer les omoplates en haut"],
+    "mistake": "Dos arrondi",
+    "easier_variant": "rowing-kettlebell-banc"
+  },
+  {
+    "slug": "souleve-de-terre-jambes-tendues",
+    "name_fr": "Soulevé de terre jambes tendues",
+    "name_en": "stiff-legged deadlift, romanian deadlift",
+    "muscles": "Ischio-jambiers, fessiers, lombaires",
+    "cues": ["Genoux légèrement fléchis", "La barre glisse le long des cuisses", "La hanche recule, le dos reste plat"],
+    "mistake": "Dos qui s'arrondit en bas",
+    "easier_variant_text": "Amplitude réduite jusqu'aux genoux"
+  },
+  {
+    "slug": "fentes-arriere",
+    "name_fr": "Fentes arrière",
+    "name_en": "rear lunge, reverse lunge",
+    "muscles": "Quadriceps, fessiers",
+    "cues": ["Grand pas en arrière", "Genou arrière vers le sol", "Buste droit"],
+    "mistake": "Genou avant qui rentre vers l'intérieur",
+    "easier_variant_text": "Sans poids, une main sur un appui"
+  },
+  {
+    "slug": "releves-jambes-banc",
+    "name_fr": "Relevés de jambes sur banc",
+    "name_en": "flat bench leg raise, lying leg raise",
+    "muscles": "Abdominaux (partie basse), fléchisseurs de hanche",
+    "cues": ["Mains qui tiennent le banc", "Bas du dos plaqué", "Descendre lentement"],
+    "mistake": "Dos qui se cambre",
+    "easier_variant_text": "Jambes fléchies"
+  },
+  {
+    "slug": "planche",
+    "name_fr": "Planche avant-bras",
+    "name_en": "plank",
+    "muscles": "Sangle abdominale, épaules",
+    "cues": ["Coudes sous les épaules", "Corps aligné de la tête aux talons", "Ventre et fessiers serrés"],
+    "mistake": "Bassin qui s'affaisse",
+    "easier_variant_text": "Sur les genoux"
+  },
+  {
+    "slug": "rotations-russes",
+    "name_fr": "Rotations russes",
+    "name_en": "russian twist",
+    "muscles": "Obliques, sangle abdominale",
+    "cues": ["Assis, buste incliné en arrière", "Rotation des épaules, pas seulement des bras", "Dos long, regard qui suit la charge"],
+    "mistake": "Dos arrondi",
+    "easier_variant_text": "Pieds au sol, sans poids"
+  },
+  {
+    "slug": "kettlebell-swing",
+    "name_fr": "Kettlebell swing",
+    "name_en": "kettlebell swing",
+    "muscles": "Fessiers, ischio-jambiers, lombaires, cardio",
+    "cues": ["Le mouvement part des hanches", "Bras relâchés, la kettlebell flotte", "Fessiers serrés en haut"],
+    "mistake": "Squatter au lieu de basculer les hanches",
+    "easier_variant_text": "Kettlebell 10 kg, amplitude jusqu'au bassin"
+  },
+  {
+    "slug": "marche-inclinee",
+    "name_fr": "Marche inclinée (fractionné)",
+    "name_en": "incline treadmill walk intervals",
+    "muscles": "Fessiers, mollets, cardio",
+    "cues": ["Ne pas se tenir aux barres", "Grands pas, buste légèrement penché vers l'avant", "Respiration régulière, plus forte en phase rapide"],
+    "mistake": "Se pendre aux poignées",
+    "easier_variant_text": "Pente réduite"
+  },
+  {
+    "slug": "marche-fermier",
+    "name_fr": "Marche du fermier unilatérale",
+    "name_en": "suitcase carry, farmer's walk",
+    "muscles": "Obliques, gainage, avant-bras, trapèzes",
+    "cues": ["Kettlebell d'un côté", "Épaules à niveau", "Buste vertical, pas réguliers"],
+    "mistake": "Pencher vers la charge",
+    "easier_variant_text": "Kettlebell 10 kg"
+  },
+  {
+    "slug": "dead-bug",
+    "name_fr": "Dead bug",
+    "name_en": "dead bug",
+    "muscles": "Sangle abdominale profonde (transverse)",
+    "cues": ["Sur le dos, bras vers le plafond, genoux à 90°", "Bras et jambe opposés descendent lentement", "Bas du dos au sol tout le temps"],
+    "mistake": "Dos qui décolle",
+    "easier_variant_text": "Bouger seulement les jambes"
+  },
+  {
+    "slug": "hollow-hold",
+    "name_fr": "Hollow hold",
+    "name_en": "hollow hold, hollow body",
+    "muscles": "Sangle abdominale",
+    "cues": ["Bas du dos collé au sol", "Bras et jambes tendus et décollés", "Respirer calmement"],
+    "mistake": "Dos qui se creuse",
+    "easier_variant_text": "Genoux pliés, bras le long du corps"
+  },
+  {
+    "slug": "developpe-couche",
+    "name_fr": "Développé couché barre",
+    "name_en": "barbell bench press",
+    "muscles": "Pectoraux, triceps, épaules",
+    "cues": ["Pieds au sol", "Omoplates serrées", "Barre vers le bas des pectoraux"],
+    "mistake": "Fesses qui décollent du banc",
+    "easier_variant_text": "Charge plus légère, amplitude contrôlée"
+  },
+  {
+    "slug": "rowing-kettlebell-banc",
+    "name_fr": "Rowing kettlebell sur banc",
+    "name_en": "one arm kettlebell row, one arm dumbbell row",
+    "muscles": "Dos (grand dorsal), biceps",
+    "cues": ["Main et genou sur le banc", "Dos plat", "Coude qui remonte le long du corps"],
+    "mistake": "Rotation du buste",
+    "easier_variant_text": "Kettlebell 10 kg"
+  },
+  {
+    "slug": "crunch-banc",
+    "name_fr": "Crunch sur banc",
+    "name_en": "crunch, decline crunch",
+    "muscles": "Grand droit de l'abdomen",
+    "cues": ["Menton légèrement rentré", "Enrouler le haut du dos", "Souffler en montant"],
+    "mistake": "Tirer sur la nuque",
+    "easier_variant_text": "Amplitude réduite"
+  },
+  {
+    "slug": "mountain-climbers",
+    "name_fr": "Mountain climbers",
+    "name_en": "mountain climbers",
+    "muscles": "Sangle abdominale, épaules, cardio",
+    "cues": ["Position de pompe, mains sous les épaules", "Genoux vers la poitrine en alternance", "Bassin bas"],
+    "mistake": "Fesses trop hautes",
+    "easier_variant_text": "Rythme lent, pas à pas"
+  },
+  {
+    "slug": "etirements",
+    "name_fr": "Étirements hanches et dos",
+    "name_en": "hip flexor stretch, child's pose, cat stretch",
+    "muscles": "Fléchisseurs de hanche, lombaires, fessiers",
+    "cues": ["Fente basse, bassin vers l'avant : 30 s par côté", "Posture de l'enfant, bras devant : 30 s", "Respirer lentement, sans à-coups"],
+    "mistake": "Forcer ou rebondir dans l'étirement",
+    "easier_variant_text": "Genou au sol sur un coussin, amplitude réduite"
+  }
+]

@@ -1,0 +1,6 @@
+/vendor/
+/var/*
+!/var/.gitkeep
+/.env
+.DS_Store
+.phpunit.cache/
