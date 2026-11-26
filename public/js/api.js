@@ -46,6 +46,7 @@ export const api = {
   stats: () => request('GET', '/api/stats'),
   measures: () => request('GET', '/api/measures'),
   addMeasure: (m) => request('POST', '/api/measures', m),
+  profile: (p) => request('POST', '/api/profile', p),
   weighSchedule: (day, time) => request('POST', '/api/measures/schedule', { day, time }),
   push: () => request('GET', '/api/push'),
   pushSubscribe: (sub) => request('POST', '/api/push/subscribe', sub),

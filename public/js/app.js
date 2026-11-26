@@ -3,7 +3,7 @@ import { api, ApiError } from './api.js';
 import { flush, pendingCount } from './queue.js';
 import { html, render as baseRender, exerciseVisual, formatSeconds, formatTarget, longDate, num, preloadMedia } from './ui.js';
 import { loadPushups, pushupsCard, pushupsPlanPage, pushupsTracking } from './pushups.js';
-import { loadTracking, onTrackingChange, trackingCards, weighDueCard } from './tracking.js';
+import { loadTracking, onTrackingChange, profileCard, trackingCards, weighDueCard } from './tracking.js';
 import { loadPush, onPushChange, pushPromptCard, pushSettings } from './push.js';
 import { closeStale, loadActive, screenActive, screenEnd, startWorkout, stopRunner } from './workout.js';
 
@@ -289,8 +289,9 @@ function screenPlaceholder(title, tab, lot) {
 
 async function screenSettings({ reload = true } = {}) {
   const u = state.me.user;
-  if (reload) await loadPush();
+  if (reload) await Promise.all([loadPush(), loadTracking()]);
   onPushChange(() => screenSettings({ reload: false }));
+  onTrackingChange(() => screenSettings({ reload: false }));
   render(html`
     <h1>Réglages</h1>
     <section class="card">
@@ -298,6 +299,7 @@ async function screenSettings({ reload = true } = {}) {
       <p>${u.email}<br><span class="muted">Fuseau : ${u.timezone}</span></p>
       <button class="btn secondary" type="button" id="logout">Se déconnecter</button>
     </section>
+    ${profileCard()}
     <ul class="list card"><li><a href="#/pompes"><span>Mon programme de pompes<br><span class="muted">Pompes par série, séries, objectif, conseils du coach</span></span></a></li></ul>
     ${pushSettings()}
     <section class="card"><p class="muted">Jours de séance et protéines : réglables aux lots suivants.</p></section>`,

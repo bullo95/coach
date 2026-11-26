@@ -93,6 +93,83 @@ function weightChart() {
   });
 }
 
+const BMI_LABELS = { insuffisant: 'insuffisance pondérale', normal: 'corpulence normale', surpoids: 'surpoids', obesite: 'obésité' };
+const SEXES = [['', 'Non renseigné'], ['homme', 'Homme'], ['femme', 'Femme'], ['autre', 'Autre']];
+
+function waistChart() {
+  const pts = measures.waists.slice(-26);
+  return lineChart(pts.map((p) => ({ value: p.value, label: shortDate(p.date), tip: `${longDate(p.date)} : ${num(p.value)} cm` })), {
+    unit: 'cm',
+    caption: 'Tour de taille',
+    head: ['Date', 'Tour de taille'],
+    rows: pts.map((p) => [shortDate(p.date), p.value]),
+  });
+}
+
+/** Carte « Corpulence » : IMC, poids de référence pour la taille, tour de taille. */
+function bodyCard(compact) {
+  const b = measures.body;
+  const p = measures.profile;
+  const waistNote = b.waist_cm == null ? ''
+    : b.waist_level === 'ok' ? `sous le repère de ${b.waist_limits[0]} cm`
+      : b.waist_level === 'eleve' ? `au-dessus du repère de ${b.waist_limits[0]} cm`
+        : b.waist_level === 'tres_eleve' ? `au-dessus du repère de ${b.waist_limits[1]} cm`
+          : b.waist_ratio != null ? `${num(b.waist_ratio)} fois la taille (repère : moins de 0,5)` : '';
+  return html`
+    <section class="card" aria-labelledby="h-corpulence">
+      <div class="block-head"><h2 id="h-corpulence">Corpulence</h2>${p.age != null ? html`<span class="tag">${p.age} ans</span>` : ''}</div>
+      ${b.bmi != null
+        ? html`<p class="figure"><strong>${num(b.bmi)}</strong> d'IMC${b.bmi_category ? html`<span class="muted"> · ${BMI_LABELS[b.bmi_category]}</span>` : ''}</p>
+          <p class="muted">Pour ${num(p.height_cm)} cm, la corpulence normale va de ${num(b.healthy_min_kg)} à ${num(b.healthy_max_kg)} kg.</p>`
+        : html`<p class="muted">${p.height_cm == null ? 'Indique ta taille pour calculer ton IMC.' : 'L\'IMC s\'affichera après ta première pesée.'}</p>
+          ${p.height_cm == null ? html`<p class="card-link"><a href="#/reglages">Compléter mon profil</a></p>` : ''}`}
+      ${b.waist_cm != null
+        ? html`<p class="figure"><strong>${num(b.waist_cm)}</strong> cm de tour de taille${waistNote ? html`<span class="muted"> · ${waistNote}</span>` : ''}</p>`
+        : compact ? '' : html`<p class="muted">Pas encore de tour de taille.</p>`}
+      ${compact ? '' : html`
+        ${measures.waists.length > 1 ? waistChart() : ''}
+        <h3>Tour de taille</h3>
+        <form class="inline-form" data-waist-form>
+          <label class="sr-only" for="waist-cm">Tour de taille en centimètres</label>
+          <input id="waist-cm" type="text" inputmode="decimal" autocomplete="off" placeholder="${b.waist_cm ? `${num(b.waist_cm)} cm` : 'Tour de taille en cm'}" required>
+          <button class="btn secondary" type="submit">Enregistrer</button>
+        </form>
+        <p class="error" role="alert" data-weigh-error></p>
+        <p class="muted small-note">Une fois par mois, debout, au niveau du nombril, après une expiration normale, sans serrer le mètre.</p>
+        <p class="muted small-note">L'IMC ne distingue pas le muscle de la graisse : chez quelqu'un de musclé, il surestime. Le tour de taille renseigne mieux sur la graisse du ventre. Ce sont des repères, pas un diagnostic.</p>`}
+    </section>`;
+}
+
+/** Formulaire du profil, pour l'écran Réglages. */
+export function profileCard() {
+  if (!measures) return html`<section class="card"><h2>Mon profil</h2><p class="muted">Hors ligne : profil indisponible.</p></section>`;
+  const p = measures.profile;
+  const b = measures.body;
+  return html`<section class="card" aria-labelledby="h-profil">
+    <h2 id="h-profil">Mon profil</h2>
+    <form data-profile>
+      <div class="schedule">
+        <label for="p-sex">Sexe</label>
+        <select id="p-sex" name="sex">${SEXES.map(([v, name]) => html`<option value="${v}" ${v === (p.sex ?? '') ? 'selected' : ''}>${name}</option>`)}</select>
+        <label for="p-birth">Né(e) le</label>
+        <input id="p-birth" name="birth_date" type="date" value="${p.birth_date ?? ''}" max="${new Date().toISOString().slice(0, 10)}">
+        <label for="p-height">Taille (cm)</label>
+        <input id="p-height" name="height_cm" type="text" inputmode="decimal" autocomplete="off" value="${p.height_cm != null ? num(p.height_cm) : ''}" placeholder="178">
+      </div>
+      <p class="error" role="alert" data-profile-error></p>
+      <button class="btn secondary block" type="submit">Enregistrer</button>
+    </form>
+    <p class="flash-msg" role="status" data-profile-ok hidden>Profil enregistré.</p>
+    <p class="muted small-note">${[
+      p.age != null ? `${p.age} ans` : null,
+      measures.summary.current != null ? `${num(measures.summary.current)} kg` : null,
+      b.bmi != null ? `IMC ${num(b.bmi)}` : null,
+      b.waist_cm != null ? `tour de taille ${num(b.waist_cm)} cm` : null,
+    ].filter(Boolean).join(' · ') || 'Poids et tour de taille se saisissent dans l\'onglet Suivi.'}</p>
+    <p class="muted small-note">La taille sert à l'IMC, la date de naissance à l'âge, le sexe aux repères de tour de taille. Poids et tour de taille se saisissent dans Suivi.</p>
+  </section>`;
+}
+
 /** Cartes de suivi. compact : version de l'accueil (sans réglages ni liste des pesées). */
 export function trackingCards({ compact = false } = {}) {
   if (!stats || !measures) {
@@ -132,17 +209,29 @@ export function trackingCards({ compact = false } = {}) {
         </form>
         <p class="muted small-note">Une pesée par semaine suffit : le poids varie d'un jour à l'autre, c'est la tendance qui compte. Le matin, à jeun, sur la même balance. L'app l'affiche sur l'accueil le jour venu et envoie un rappel à cette heure si les rappels sont activés (Réglages).</p>
         <p class="flash-msg" role="status" data-schedule-ok hidden>Jour de pesée enregistré.</p>`}
-    </section>`;
+    </section>
+    ${bodyCard(compact)}`;
 }
 
 // Saisies (écouteurs délégués, posés une fois).
 document.getElementById('main').addEventListener('submit', async (e) => {
   const weigh = e.target.closest('[data-weigh-form]');
   const schedule = e.target.closest('[data-weigh-schedule]');
-  if (!weigh && !schedule) return;
+  const waist = e.target.closest('[data-waist-form]');
+  const profile = e.target.closest('[data-profile]');
+  if (!weigh && !schedule && !waist && !profile) return;
   e.preventDefault();
   try {
-    if (weigh) {
+    if (profile) {
+      const f = profile.elements;
+      measures = await api.profile({ sex: f.sex.value, birth_date: f.birth_date.value, height_cm: f.height_cm.value });
+      await refresh();
+      const ok = document.querySelector('[data-profile-ok]');
+      if (ok) ok.hidden = false;
+    } else if (waist) {
+      measures = await api.addMeasure({ waist_cm: waist.querySelector('input').value });
+      await refresh();
+    } else if (weigh) {
       measures = await api.addMeasure({ weight_kg: weigh.querySelector('input').value });
       await refresh();
     } else {
@@ -152,7 +241,11 @@ document.getElementById('main').addEventListener('submit', async (e) => {
       if (ok) ok.hidden = false;
     }
   } catch (err) {
-    const el = (weigh ?? schedule).parentElement.querySelector('[data-weigh-error]') ?? document.querySelector('[data-weigh-error]');
+    if (profile) {
+      profile.querySelector('[data-profile-error]').textContent = err.message;
+      return;
+    }
+    const el = (weigh ?? schedule ?? waist).parentElement.querySelector('[data-weigh-error]') ?? document.querySelector('[data-weigh-error]');
     if (el) el.textContent = err.message;
   }
 });

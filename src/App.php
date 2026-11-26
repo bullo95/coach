@@ -131,6 +131,13 @@ final class App
             return Response::json($m->state());
         });
 
+        $r->post('/api/profile', static function (Request $req) use ($db, $uid): Response {
+            $m = new Measures($db, $uid());
+            $m->setProfile($req->json());
+
+            return Response::json($m->state());
+        });
+
         $r->post('/api/measures/schedule', static function (Request $req) use ($db, $uid): Response {
             $data = $req->json();
             $m = new Measures($db, $uid());

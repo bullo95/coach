@@ -4,7 +4,7 @@
 // Lot 5 : push et clics sur notification.
 
 // Incrémenter VERSION quand la liste SHELL change (les anciens caches sont alors supprimés).
-const VERSION = 'coach-v6';
+const VERSION = 'coach-v7';
 const SHELL = [
   '/',
   '/index.html',

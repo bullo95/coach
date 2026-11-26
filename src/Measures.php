@@ -11,16 +11,20 @@ use PDO;
 
 /**
  * Poids et tour de taille. Une pesée par semaine, le jour choisi : l'app dit quand elle est due.
+ * Profil (sexe, date de naissance, taille) : sert à l'âge, à l'IMC et aux repères de tour de taille.
  */
 final class Measures
 {
     private DateTimeZone $tz;
     private int $weighDay;
     private string $weighTime;
+    private ?string $sex;
+    private ?string $birthDate;
+    private ?float $heightCm;
 
     public function __construct(private readonly PDO $db, private readonly int $userId)
     {
-        $stmt = $db->prepare('SELECT u.timezone, s.weigh_day, s.weigh_time FROM user u JOIN settings s ON s.user_id = u.id WHERE u.id = ?');
+        $stmt = $db->prepare('SELECT u.timezone, s.weigh_day, s.weigh_time, s.sex, s.birth_date, s.height_cm FROM user u JOIN settings s ON s.user_id = u.id WHERE u.id = ?');
         $stmt->execute([$userId]);
         $row = $stmt->fetch();
         if (!$row) {
@@ -29,6 +33,9 @@ final class Measures
         $this->tz = new DateTimeZone($row['timezone']);
         $this->weighDay = (int) $row['weigh_day'];
         $this->weighTime = (string) $row['weigh_time'];
+        $this->sex = $row['sex'];
+        $this->birthDate = $row['birth_date'];
+        $this->heightCm = $row['height_cm'] !== null ? (float) $row['height_cm'] : null;
     }
 
     /** @return array<string, mixed> pesées (de la plus ancienne à la plus récente) et état de la pesée de la semaine */
@@ -53,9 +60,14 @@ final class Measures
         $first = $weights[0] ?? null;
         $prev = \count($weights) >= 2 ? $weights[\count($weights) - 2] : null;
 
+        $waists = $this->series('waist_cm');
+        $age = $this->birthDate !== null ? (new DateTimeImmutable($this->birthDate, $this->tz))->diff(new DateTimeImmutable($today, $this->tz))->y : null;
+
         return [
             'weights' => $weights,
-            'waists' => $this->series('waist_cm'),
+            'waists' => $waists,
+            'profile' => ['sex' => $this->sex, 'birth_date' => $this->birthDate, 'age' => $age, 'height_cm' => $this->heightCm],
+            'body' => self::body($last['value'] ?? null, $waists ? $waists[\count($waists) - 1]['value'] : null, $this->heightCm, $this->sex, $age),
             'weigh' => [
                 'day' => $this->weighDay,
                 'time' => $this->weighTime,
@@ -93,6 +105,55 @@ final class Measures
             $this->db->prepare('INSERT INTO body_measure (user_id, measured_at, weight_kg, waist_cm) VALUES (?, ?, ?, ?)')
                 ->execute([$this->userId, $day, $weight, $waist]);
         }
+    }
+
+    /**
+     * Repères de corpulence. IMC = poids / taille² ; classes de l'OMS pour l'adulte (pas de classe avant 18 ans).
+     * Tour de taille : rapport à la taille (repère 0,5) et seuils européens selon le sexe (94 / 102 cm homme, 80 / 88 cm femme).
+     *
+     * @return array<string, mixed>
+     */
+    public static function body(?float $weightKg, ?float $waistCm, ?float $heightCm, ?string $sex, ?int $age): array
+    {
+        $m = $heightCm !== null ? $heightCm / 100 : null;
+        $bmi = $weightKg !== null && $m !== null ? round($weightKg / ($m * $m), 1) : null;
+        $category = null;
+        if ($bmi !== null && ($age === null || $age >= 18)) {
+            $category = $bmi < 18.5 ? 'insuffisant' : ($bmi < 25 ? 'normal' : ($bmi < 30 ? 'surpoids' : 'obesite'));
+        }
+        $limits = ['homme' => [94, 102], 'femme' => [80, 88]][$sex ?? ''] ?? null;
+
+        return [
+            'bmi' => $bmi,
+            'bmi_category' => $category,
+            'healthy_min_kg' => $m !== null ? round(18.5 * $m * $m, 1) : null,
+            'healthy_max_kg' => $m !== null ? round(25 * $m * $m, 1) : null,
+            'waist_cm' => $waistCm,
+            'waist_ratio' => $waistCm !== null && $heightCm !== null ? round($waistCm / $heightCm, 2) : null,
+            'waist_level' => $waistCm !== null && $limits !== null ? ($waistCm < $limits[0] ? 'ok' : ($waistCm < $limits[1] ? 'eleve' : 'tres_eleve')) : null,
+            'waist_limits' => $limits,
+        ];
+    }
+
+    /** @param array<string, mixed> $data sex, birth_date (AAAA-MM-JJ), height_cm ; une valeur vide efface le champ */
+    public function setProfile(array $data, ?DateTimeImmutable $now = null): void
+    {
+        $sex = ($data['sex'] ?? '') === '' ? null : $data['sex'];
+        if ($sex !== null && !\in_array($sex, ['homme', 'femme', 'autre'], true)) {
+            throw new HttpError(422, 'Sexe : homme, femme ou autre');
+        }
+        $birth = ($data['birth_date'] ?? '') === '' ? null : $data['birth_date'];
+        if ($birth !== null) {
+            $d = \is_string($birth) ? DateTimeImmutable::createFromFormat('!Y-m-d', $birth, $this->tz) : false;
+            $today = ($now ?? new DateTimeImmutable('now'))->setTimezone($this->tz);
+            if (!$d || $d->format('Y-m-d') !== $birth || $d > $today || $d->diff($today)->y > 120) {
+                throw new HttpError(422, 'Date de naissance invalide');
+            }
+        }
+        $height = self::number($data['height_cm'] ?? null, 100, 250, 'Taille : entre 100 et 250 cm');
+        $this->db->prepare('UPDATE settings SET sex = ?, birth_date = ?, height_cm = ? WHERE user_id = ?')
+            ->execute([$sex, $birth, $height, $this->userId]);
+        [$this->sex, $this->birthDate, $this->heightCm] = [$sex, $birth, $height];
     }
 
     public function delete(string $day): void

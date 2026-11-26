@@ -96,4 +96,48 @@ final class MeasuresTest extends DatabaseTestCase
         self::assertNull($o['pushups'][0]['target'], 'jour sans donnée');
         self::assertSame(3, $o['totals']['sessions']);
     }
+
+    public function testProfileGivesAgeBmiAndWaistMarkers(): void
+    {
+        $m = new Measures($this->db, $this->uid);
+        $s = $m->state($this->at('2026-11-26 09:00'));
+        self::assertNull($s['body']['bmi']);
+        self::assertNull($s['profile']['age']);
+
+        $m->setProfile(['sex' => 'homme', 'birth_date' => '1979-11-27', 'height_cm' => '178'], $this->at('2026-11-26 09:00'));
+        $m->add(85, 97, $this->at('2026-11-26 09:00'));
+        $s = $m->state($this->at('2026-11-26 09:00'));
+        self::assertSame(46, $s['profile']['age']); // anniversaire demain
+        self::assertSame(47, $m->state($this->at('2026-11-27 09:00'))['profile']['age']);
+        self::assertSame(26.8, $s['body']['bmi']);
+        self::assertSame('surpoids', $s['body']['bmi_category']);
+        self::assertSame(58.6, $s['body']['healthy_min_kg']);
+        self::assertSame(79.2, $s['body']['healthy_max_kg']);
+        self::assertSame(0.54, $s['body']['waist_ratio']);
+        self::assertSame('eleve', $s['body']['waist_level']); // homme : entre 94 et 102 cm
+    }
+
+    public function testBodyMarkersDependOnSexAndAge(): void
+    {
+        self::assertSame('tres_eleve', Measures::body(70, 90, 165, 'femme', 40)['waist_level']);
+        self::assertNull(Measures::body(70, 90, 165, 'autre', 40)['waist_level']);
+        self::assertSame('normal', Measures::body(70, null, 178, null, null)['bmi_category']);
+        self::assertNull(Measures::body(50, null, 160, 'homme', 15)['bmi_category']); // pas de classe avant 18 ans
+        self::assertSame('obesite', Measures::body(100, null, 178, 'homme', 47)['bmi_category']);
+    }
+
+    public function testProfileValidation(): void
+    {
+        $m = new Measures($this->db, $this->uid);
+        foreach ([['sex' => 'x'], ['birth_date' => '2030-01-01'], ['birth_date' => '1979-02-30'], ['height_cm' => '17']] as $bad) {
+            try {
+                $m->setProfile($bad, $this->at('2026-11-26 09:00'));
+                self::fail('profil invalide accepté : ' . json_encode($bad));
+            } catch (HttpError $e) {
+                self::assertSame(422, $e->status);
+            }
+        }
+        $m->setProfile(['sex' => '', 'birth_date' => '', 'height_cm' => ''], $this->at('2026-11-26 09:00')); // tout effacer
+        self::assertNull($m->state($this->at('2026-11-26 09:00'))['profile']['height_cm']);
+    }
 }

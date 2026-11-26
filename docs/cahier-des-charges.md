@@ -1,6 +1,6 @@
 # Cahier des charges — Application de suivi sportif
 
-Nov 26, 2026 · @Bruno · révision 13 (voir « Journal des décisions »)
+Nov 26, 2026 · @Bruno · révision 14 (voir « Journal des décisions »)
 
 ## Contexte et objectifs
 
@@ -735,3 +735,14 @@ Révision 13 du 26 novembre 2026 : première livraison sur la VM.
 | Installation | `/srv/coach`, site nginx sur le port 8080 en HTTP (`deploy/nginx-coach.conf`), cron des rappels sous `www-data`, livraison par `deploy/livrer.sh` (rsync) |
 | Limite | Sans HTTPS, l'app s'utilise dans un navigateur du réseau local mais ne s'installe pas sur l'iPhone et ne reçoit pas de notification : un nom de domaine avec certificat reste à mettre en place |
 | Reste à faire | Compte utilisateur, sujet VAPID, sauvegarde, redémarrage de la VM (nouveau noyau en attente) |
+
+Révision 14 du 26 novembre 2026 : profil et corpulence, à la demande de l'utilisateur.
+
+| Sujet | Décision |
+| --- | --- |
+| Profil | Sexe (homme, femme, autre), date de naissance et taille, saisis dans Réglages (`settings.sex`, `birth_date`, `height_cm`, migration 006) ; tous facultatifs |
+| Âge | Calculé à partir de la date de naissance, jamais saisi |
+| IMC | Poids de la dernière pesée / taille² ; classes de l'OMS pour l'adulte (moins de 18,5 ; 18,5 à 25 ; 25 à 30 ; 30 et plus), aucune classe avant 18 ans ; poids correspondant à la corpulence normale affiché pour la taille |
+| Tour de taille | Saisie mensuelle et courbe dans Suivi ; repères selon le sexe (94 et 102 cm pour un homme, 80 et 88 cm pour une femme) ; sans sexe renseigné ou « autre », rapport tour de taille / taille (repère : moins de 0,5) |
+| Affichage | Carte « Corpulence » sur l'accueil et dans Suivi, avec la mention que ce sont des repères et non un diagnostic |
+| Reste à faire | Rappel mensuel du tour de taille par notification |
