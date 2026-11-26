@@ -307,3 +307,49 @@ body.flash::after { content: ""; position: fixed; inset: 0; background: #fff; op
 .choices.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .choices.three .choice { padding: 6px 4px; font-size: 1rem; }
 .choices.three .choice span { font-size: .7rem; line-height: 1.2; }
+
+/* --- Graphes de suivi ----------------------------------------------------------------- */
+:root { --data: #3987e5; /* bleu des données : 4,9:1 sur la carte ; le rouge reste réservé aux actions */ }
+.section-title { margin-top: 28px; }
+.figure { margin: 2px 0 8px; }
+.figure strong { font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+.chart { position: relative; margin-top: 4px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .bar { fill: var(--data); }
+.chart .bar.muted { fill: #5b6676; }
+.chart .bar.zero { fill: var(--border); }
+.chart .line { fill: none; stroke: var(--data); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { fill: var(--data); stroke: var(--surface); stroke-width: 2; }
+.chart .grid { stroke: var(--border); stroke-width: 1; }
+.chart .target { stroke: var(--text-muted); stroke-width: 1; }
+.chart .axis { fill: var(--text-muted); font-size: 9px; font-family: var(--font); font-variant-numeric: tabular-nums; }
+.chart .hit { fill: transparent; outline: none; cursor: pointer; }
+.chart .hit.on, .chart .hit:focus-visible { fill: rgba(255, 255, 255, .07); }
+.chart-tip {
+  position: absolute; top: -6px; transform: translate(-50%, -100%); z-index: 3;
+  max-width: 92%; padding: 6px 10px; border-radius: 8px;
+  background: #f5f5f6; color: #111; font-size: .8rem; font-weight: 600; text-align: center; pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .5);
+}
+.chart-table { margin-top: 8px; font-size: .85rem; }
+.chart-table summary { color: var(--text-muted); min-height: var(--tap); display: flex; align-items: center; cursor: pointer; }
+.chart-table table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.chart-table th, .chart-table td { text-align: left; padding: 6px 4px; border-top: 1px solid var(--border); font-weight: 400; }
+.chart-table thead th { color: var(--text-muted); border-top: 0; }
+.weigh-due { border-color: var(--warning); }
+.schedule { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; margin-bottom: 8px; }
+.schedule label { margin: 0; font-weight: 400; }
+.schedule button { grid-column: 1 / -1; }
+select {
+  width: 100%; min-height: var(--tap); padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text); font: 1rem var(--font);
+}
+.card details + h3 { margin-top: 20px; }
+
+/* Rappels */
+.plain-list { list-style: none; margin: 0; padding: 0; }
+.plain-list li { padding: 6px 0; border-top: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.plain-list li:first-child { border-top: 0; }
+.plain-list strong { display: inline-block; min-width: 3.6rem; }
+.card form h3, .card form + h3 { margin-top: 18px; }
+[data-reminders] button[type="submit"] { margin-top: 14px; }

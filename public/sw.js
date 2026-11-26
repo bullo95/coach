@@ -4,7 +4,7 @@
 // Lot 5 : push et clics sur notification.
 
 // Incrémenter VERSION quand la liste SHELL change (les anciens caches sont alors supprimés).
-const VERSION = 'coach-v4';
+const VERSION = 'coach-v6';
 const SHELL = [
   '/',
   '/index.html',
@@ -15,6 +15,9 @@ const SHELL = [
   '/js/queue.js',
   '/js/workout.js',
   '/js/pushups.js',
+  '/js/charts.js',
+  '/js/tracking.js',
+  '/js/push.js',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -22,7 +25,8 @@ const SHELL = [
 ];
 // Réponses d'API lisibles hors ligne (dernière version connue).
 const CACHED_API = ['/api/me', '/api/program', '/api/exercises', '/api/today', '/api/loads', '/api/sessions',
-  '/api/pushups', '/api/pushups/history', '/api/pushups/plan/history', '/api/encouragements'];
+  '/api/pushups', '/api/pushups/history', '/api/pushups/plan/history', '/api/encouragements',
+  '/api/stats', '/api/measures'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -130,3 +134,38 @@ async function mediaResponse(req) {
     },
   });
 }
+
+// Rappels : le serveur envoie { title, body, url, tag }. iOS exige qu'une notification soit affichée à chaque push.
+self.addEventListener('push', (event) => {
+  let d = {};
+  try {
+    d = event.data ? event.data.json() : {};
+  } catch {
+    d = { body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(self.registration.showNotification(d.title || 'Coach', {
+    body: d.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    tag: d.tag || 'coach', // un nouveau rappel du même type remplace le précédent
+    renotify: true,
+    data: { url: d.url || '/' },
+  }));
+});
+
+// Tap sur la notification : ramène l'app au premier plan sur l'écran concerné, ou l'ouvre.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of windows) {
+      if ('focus' in client) {
+        await client.focus();
+        client.postMessage({ type: 'open', url });
+        return;
+      }
+    }
+    await self.clients.openWindow(url);
+  })());
+});

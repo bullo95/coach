@@ -1,6 +1,6 @@
 # Cahier des charges — Application de suivi sportif
 
-Nov 25, 2026 · @Bruno · révision 10 (voir « Journal des décisions »)
+Nov 26, 2026 · @Bruno · révision 13 (voir « Journal des décisions »)
 
 ## Contexte et objectifs
 
@@ -208,7 +208,9 @@ Règles appliquées par l'app, adaptées à un démarrage à 47 ans. Les semaine
 
 - Pesée hebdomadaire et tour de taille mensuel (au nombril, debout, après expiration : consigne affichée).
 - Historique des séances : date, séance, durée, charges et répétitions par exercice.
-- Accueil : séance du jour, pompes du jour, protéines du jour, séances réalisées cette semaine (x / jours prévus).
+- Accueil : séance du jour, pompes du jour, protéines du jour, séances réalisées cette semaine (x / jours prévus), et une rubrique « Mon suivi » avec trois graphes : séances par semaine (8 semaines, avec le repère du nombre prévu), pompes par jour (14 jours, avec l'objectif), courbe du poids.
+- Graphes : une seule série par graphe, valeur affichée au toucher, tableau des chiffres sous chaque graphe (« Voir les chiffres »), couleur bleue pour les données (le rouge reste réservé aux actions).
+- Pesée : l'app dit quand se peser. Jour et heure réglables (lundi 7 h par défaut). Le jour venu, ou après plus de 7 jours sans pesée, une carte « Pesée de la semaine » apparaît en haut de l'accueil avec la saisie du poids et la consigne (le matin, à jeun, même balance). Une seule pesée par jour : une nouvelle saisie corrige la précédente.
 
 ## Démonstration des mouvements
 
@@ -379,12 +381,12 @@ L'app tient en 9 écrans, navigation par barre en bas (Accueil, Séances, Proté
 
 ## Modèle de données
 
-Vingt tables SQLite suffisent : le programme (modèle), ce qui a été fait (journal), les mesures, les protéines et les rappels. Les champs notés JSON sont stockés en texte (fonctions JSON de SQLite), les dates en texte ISO 8601.
+Vingt et une tables SQLite suffisent : le programme (modèle), ce qui a été fait (journal), les mesures, les protéines et les rappels. Les champs notés JSON sont stockés en texte (fonctions JSON de SQLite), les dates en texte ISO 8601.
 
 | Table | Champs principaux | Remarques |
 | --- | --- | --- |
 | `user` | id, email, password\_hash, timezone, created\_at | Un seul compte |
-| `settings` | user\_id, session\_days (JSON), session\_time, program\_start\_date, pushups\_reps\_per\_set (X), pushups\_sets, pushups\_light\_day\_enabled, pushups\_light\_day\_sets, pushups\_jokers\_per\_month, pushups\_joker\_auto, pushups\_last\_x\_offer\_at, pushups\_goal (endurance, volume, equilibre), pushups\_window\_start, pushups\_window\_end, protein\_coef, meals\_per\_day, quiet\_start, quiet\_end, sound\_enabled, vibration\_enabled, circuit\_transition\_s, interval\_fast\_kmh, interval\_slow\_kmh | Une ligne par utilisateur |
+| `settings` | user\_id, session\_days (JSON), session\_time, program\_start\_date, pushups\_reps\_per\_set (X), pushups\_sets, pushups\_light\_day\_enabled, pushups\_light\_day\_sets, pushups\_jokers\_per\_month, pushups\_joker\_auto, pushups\_last\_x\_offer\_at, pushups\_goal (endurance, volume, equilibre), weigh\_day, weigh\_time, pushups\_window\_start, pushups\_window\_end, protein\_coef, meals\_per\_day, quiet\_start, quiet\_end, sound\_enabled, vibration\_enabled, circuit\_transition\_s, interval\_fast\_kmh, interval\_slow\_kmh | Une ligne par utilisateur |
 | `exercise` | id, slug, name\_fr, name\_en, muscles, cues (JSON, 3 consignes), mistake, easier\_variant\_id, easier\_variant\_text, media\_type, media\_paths (JSON), source, license, attribution | Bibliothèque |
 | `workout_template` | id, code (A/B/C), name, est\_duration\_min | Programme |
 | `template_block` | id, template\_id, ref, position, name, type (warmup, circuit, sets, interval, amrap, cooldown), rounds, rest\_between\_rounds\_s, duration\_s, active | Blocs d'une séance |
@@ -698,3 +700,38 @@ Révision 10 du 25 novembre 2026 : vidéos des exercices.
 | Avancement | Squat gobelet fait ; les 20 autres exercices gardent leurs deux images en attendant |
 | Limite connue | Sur la vidéo du squat gobelet, la descente est moins profonde que la consigne et la kettlebell est tenue un peu en avant de la poitrine : la consigne écrite fait foi |
 
+Révision 11 du 25 novembre 2026 : suivi en graphes et pesée.
+
+| Sujet | Décision |
+| --- | --- |
+| Graphes | Avancés de la V2 : séances par semaine, pompes par jour et courbe du poids, sur l'accueil et dans le Suivi, en SVG sans bibliothèque |
+| Pesée | Hebdomadaire, jour et heure réglables (`settings.weigh_day`, `weigh_time`, migration 004) ; rappel affiché dans l'app le jour venu |
+| Notifications push | Toujours pas en place (lot 5) : le rappel de pesée, comme les autres, n'existe pour l'instant que dans l'app ouverte |
+| Reste à faire | Tour de taille (saisie et courbe), progression des charges par exercice en graphe |
+
+Révision 12 du 26 novembre 2026 : rappels par notification (lot 5, première partie).
+
+| Sujet | Décision |
+| --- | --- |
+| En service | Séance du jour, séance pas faite (2 h après), séries de pompes, pesée ; chacun se coupe séparément dans Réglages |
+| Pompes | Un créneau par série du jour, réparti sur la plage ; envoyé seulement si cette série n'est pas encore faite (pas de rappel quand on est en avance) |
+| Pesée | À l'heure choisie, le jour de pesée, puis chaque jour tant qu'elle est en retard |
+| Plage silencieuse | Rien n'est envoyé pendant la plage ; un créneau du matin pris dedans est décalé à la fin de la plage, un créneau du soir est abandonné |
+| Pas de rattrapage | Un créneau n'est envoyé que dans les 20 min qui suivent son heure ; un envoi qui échoue est retenté chaque minute pendant ce délai |
+| Regroupement | Plusieurs rappels dus à la même minute partent dans une seule notification |
+| Anti-doublon | Table `reminder_log` (migration 005, 21 tables) : un créneau envoyé n'est jamais renvoyé ; la table `reminder` garde l'état activé de chaque type |
+| Abonnement | Un abonnement par appareil (`push_subscription`), bouton « Activer les rappels » sur l'accueil et dans Réglages, notification d'essai ; un abonnement périmé est retiré tout seul |
+| Sécurité | Le serveur n'envoie qu'aux services push d'Apple, Google, Mozilla et Microsoft ; clés VAPID dans `.env`, créées par `php bin/vapid-keys.php [sujet]` |
+| Tap sur la notification | Ouvre l'écran concerné (aperçu de la séance, accueil pour les pompes et la pesée) |
+| Reporté | Boutons d'action « +X » et « Reporter à demain » (Android), rappels protéines et tour de taille (leurs écrans n'existent pas encore), export .ics |
+| Non vérifié | Réception réelle sur iPhone : demande l'app en HTTPS et installée sur l'écran d'accueil |
+
+Révision 13 du 26 novembre 2026 : première livraison sur la VM.
+
+| Sujet | Décision |
+| --- | --- |
+| Machine | VM de la Freebox à l'adresse locale 192.168.1.199 : Ubuntu 24.04, nginx et PHP-FPM 8.3 (et non Debian 13, Caddy et PHP 8.4), partagée avec free-control |
+| PHP | Version minimale ramenée à 8.3 (`composer.json`) ; le code n'utilisait rien de propre à 8.4 |
+| Installation | `/srv/coach`, site nginx sur le port 8080 en HTTP (`deploy/nginx-coach.conf`), cron des rappels sous `www-data`, livraison par `deploy/livrer.sh` (rsync) |
+| Limite | Sans HTTPS, l'app s'utilise dans un navigateur du réseau local mais ne s'installe pas sur l'iPhone et ne reçoit pas de notification : un nom de domaine avec certificat reste à mettre en place |
+| Reste à faire | Compte utilisateur, sujet VAPID, sauvegarde, redémarrage de la VM (nouveau noyau en attente) |

@@ -3,6 +3,8 @@ import { api, ApiError } from './api.js';
 import { flush, pendingCount } from './queue.js';
 import { html, render as baseRender, exerciseVisual, formatSeconds, formatTarget, longDate, num, preloadMedia } from './ui.js';
 import { loadPushups, pushupsCard, pushupsPlanPage, pushupsTracking } from './pushups.js';
+import { loadTracking, onTrackingChange, trackingCards, weighDueCard } from './tracking.js';
+import { loadPush, onPushChange, pushPromptCard, pushSettings } from './push.js';
 import { closeStale, loadActive, screenActive, screenEnd, startWorkout, stopRunner } from './workout.js';
 
 const main = document.getElementById('main');
@@ -80,7 +82,11 @@ async function screenHome() {
     pendingCount().catch(() => 0),
     loadWorkoutData().catch(() => null), // prépare le cache hors ligne de la séance
     loadPushups(),
+    loadTracking(),
+    loadPush(),
   ]);
+  onTrackingChange(route);
+  onPushChange(route);
   api.loads().catch(() => {});
   const active = loadActive();
   const flash = sessionStorage.getItem('coach.flash');
@@ -117,6 +123,7 @@ async function screenHome() {
   render(html`
     <h1>Bonjour</h1>
     ${flash ? html`<p class="flash-msg" role="status">${flash}</p>` : ''}
+    ${weighDueCard()}
     <section class="card" aria-labelledby="h-seance">
       <h2 id="h-seance">Séance</h2>
       ${session}
@@ -124,6 +131,10 @@ async function screenHome() {
     </section>
     ${pending ? html`<p class="muted" role="status">${pending} saisie${pending > 1 ? 's' : ''} en attente d'envoi : elles partiront au retour du réseau.</p>` : ''}
     ${pushupsCard()}
+    ${pushPromptCard()}
+    <h2 class="section-title">Mon suivi</h2>
+    ${trackingCards({ compact: true })}
+    <p class="card-link"><a href="#/suivi">Tout le suivi, réglage de la pesée</a></p>
     <section class="card" aria-labelledby="h-prot">
       <h2 id="h-prot">Protéines du jour</h2>
       <p class="muted">Calcul de l'objectif (${num(s.protein_coef)} g/kg) et suivi au lot 4.</p>
@@ -218,6 +229,8 @@ async function screenExercise(slug) {
 }
 
 async function screenTracking() {
+  await loadTracking();
+  onTrackingChange(route);
   const pushups = await pushupsTracking();
   let sessions;
   try {
@@ -228,6 +241,8 @@ async function screenTracking() {
   }
   render(html`
     <h1>Suivi</h1>
+    ${weighDueCard()}
+    ${trackingCards()}
     <h2>Historique des séances</h2>
     ${sessions === null ? html`<p class="muted">Hors ligne : historique indisponible.</p>`
       : !sessions.length ? html`<section class="card"><p class="muted">Aucune séance pour l'instant.</p></section>`
@@ -236,7 +251,7 @@ async function screenTracking() {
           <span class="muted">${x.joker ? 'Sautée avec un joker' : `${x.status === 'in_progress' ? 'En cours' : `${x.duration_min ?? '—'} min`} · ${x.sets_count} séries${x.pain_flag ? ' · douleur signalée' : ''}`}</span></span>
         </a></li>`)}</ul>`}
     ${pushups}
-    <section class="card"><p class="muted">Poids, tour de taille et protéines : au lot 4.</p></section>`,
+    <section class="card"><p class="muted">Tour de taille et protéines : au lot 4.</p></section>`,
   { title: 'Suivi', tab: 'suivi' });
 }
 
@@ -272,8 +287,10 @@ function screenPlaceholder(title, tab, lot) {
   render(html`<h1>${title}</h1><section class="card"><p class="muted">Cet écran arrive au lot ${lot}.</p></section>`, { title, tab });
 }
 
-function screenSettings() {
+async function screenSettings({ reload = true } = {}) {
   const u = state.me.user;
+  if (reload) await loadPush();
+  onPushChange(() => screenSettings({ reload: false }));
   render(html`
     <h1>Réglages</h1>
     <section class="card">
@@ -282,7 +299,8 @@ function screenSettings() {
       <button class="btn secondary" type="button" id="logout">Se déconnecter</button>
     </section>
     <ul class="list card"><li><a href="#/pompes"><span>Mon programme de pompes<br><span class="muted">Pompes par série, séries, objectif, conseils du coach</span></span></a></li></ul>
-    <section class="card"><p class="muted">Jours de séance, rappels et protéines : réglables aux lots suivants.</p></section>`,
+    ${pushSettings()}
+    <section class="card"><p class="muted">Jours de séance et protéines : réglables aux lots suivants.</p></section>`,
   { title: 'Réglages', tab: 'reglages' });
   document.getElementById('logout').addEventListener('click', async () => {
     await flush();
@@ -327,7 +345,7 @@ const routes = [
   [/^\/proteines$/, () => screenPlaceholder('Protéines', 'proteines', 4)],
   [/^\/suivi$/, screenTracking],
   [/^\/suivi\/seances\/(\d+)$/, screenSessionDetail],
-  [/^\/reglages$/, screenSettings],
+  [/^\/reglages$/, () => screenSettings()],
 ];
 
 async function route() {

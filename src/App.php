@@ -118,6 +118,76 @@ final class App
             return Response::json($p->state());
         });
 
+        // Suivi : graphes, poids et tour de taille.
+        $r->get('/api/stats', static fn () => Response::json((new Stats($db, $uid()))->overview()));
+
+        $r->get('/api/measures', static fn () => Response::json((new Measures($db, $uid()))->state()));
+
+        $r->post('/api/measures', static function (Request $req) use ($db, $uid): Response {
+            $data = $req->json();
+            $m = new Measures($db, $uid());
+            $m->add($data['weight_kg'] ?? null, $data['waist_cm'] ?? null);
+
+            return Response::json($m->state());
+        });
+
+        $r->post('/api/measures/schedule', static function (Request $req) use ($db, $uid): Response {
+            $data = $req->json();
+            $m = new Measures($db, $uid());
+            $m->setSchedule($data['day'] ?? null, $data['time'] ?? null);
+
+            return Response::json($m->state());
+        });
+
+        $r->post('/api/measures/{day}/delete', static function (Request $req) use ($db, $uid): Response {
+            $m = new Measures($db, $uid());
+            $m->delete($req->params['day']);
+
+            return Response::json($m->state());
+        });
+
+        // Rappels : abonnement de l'appareil aux notifications, réglages, essai.
+        $pushState = static fn (): array => [
+            'configured' => Push::configured(),
+            'missing' => Push::missing(),
+            'public_key' => Push::configured() ? Config::get('VAPID_PUBLIC_KEY') : null,
+            'devices' => (new Push($db, $uid()))->count(),
+        ] + (new Reminders($db, $uid()))->state();
+
+        $r->get('/api/push', static fn () => Response::json($pushState()));
+
+        $r->post('/api/push/subscribe', static function (Request $req) use ($db, $uid, $pushState): Response {
+            (new Push($db, $uid()))->subscribe($req->json(), $req->header('user-agent'));
+
+            return Response::json($pushState());
+        });
+
+        $r->post('/api/push/unsubscribe', static function (Request $req) use ($db, $uid, $pushState): Response {
+            (new Push($db, $uid()))->unsubscribe((string) ($req->json()['endpoint'] ?? ''));
+
+            return Response::json($pushState());
+        });
+
+        $r->post('/api/push/test', static function () use ($db, $uid): Response {
+            if (!Push::configured()) {
+                throw new HttpError(409, 'Notifications non réglées sur le serveur : ' . Push::missing());
+            }
+            $push = new Push($db, $uid());
+            if ($push->count() === 0) {
+                throw new HttpError(409, 'Aucun appareil abonné');
+            }
+
+            return Response::json($push->sendAll([
+                'title' => 'Coach', 'body' => 'Les rappels fonctionnent sur cet appareil.', 'url' => '/#/reglages', 'tag' => 'test',
+            ], new WebPushSender()));
+        });
+
+        $r->post('/api/reminders', static function (Request $req) use ($db, $uid, $pushState): Response {
+            (new Reminders($db, $uid()))->update($req->json());
+
+            return Response::json($pushState());
+        });
+
         // Coach des pompes : programme, ressenti, conseil.
         $r->post('/api/pushups/plan', static function (Request $req) use ($db, $uid): Response {
             $p = new Pushups($db, $uid());

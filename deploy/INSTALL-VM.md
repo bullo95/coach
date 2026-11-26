@@ -37,6 +37,7 @@ sudo -u coach composer install --no-dev --optimize-autoloader
 sudo -u coach php bin/migrate.php
 sudo -u coach php bin/seed.php
 sudo -u coach php bin/create-user.php votre@email.fr Europe/Paris
+sudo -u coach php bin/vapid-keys.php mailto:votre@email.fr   # clés des notifications
 ```
 
 ## 5. Services
@@ -64,3 +65,18 @@ sqlite3 /tmp/test.sqlite "select count(*) from exercise;"
 
 - SSH accessible seulement depuis le réseau local ou le VPN de la Freebox.
 - `sudo apt install unattended-upgrades` pour les mises à jour de sécurité automatiques.
+
+## VM Ubuntu avec nginx (installation en place sur 192.168.1.199)
+
+La VM actuelle est en Ubuntu 24.04 avec nginx et PHP-FPM 8.3 ; elle sert déjà free-control sur le port 80. Coach y est installé à côté, sans compte ni pool dédiés :
+
+- code dans `/srv/coach` (compte `freebox`), données dans `/srv/coach/var` (compte `www-data`) ;
+- site nginx `deploy/nginx-coach.conf` sur le port 8080, en HTTP, réseau local seulement ;
+- rappels : crontab de `www-data`, chaque minute ;
+- paquets ajoutés : `php8.3-sqlite3 php8.3-mbstring php8.3-gmp composer unzip sqlite3`.
+
+Livrer une nouvelle version depuis le Mac : `deploy/livrer.sh`.
+
+Créer le compte (une fois) : `ssh -t freebox@192.168.1.199 'cd /srv/coach && sudo -u www-data php bin/create-user.php votre@email.fr'`.
+
+Reste à faire pour l'iPhone : un nom de domaine en HTTPS (installation de l'app et notifications), puis la sauvegarde (`deploy/backup.sh`).

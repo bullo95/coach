@@ -24,6 +24,8 @@ composer serve            # http://localhost:8010
 | `php bin/seed.php` | Recharge la bibliothèque et le programme depuis `data/*.json`, sans toucher à l'historique |
 | `php bin/create-user.php email [fuseau]` | Crée le compte unique |
 | `php bin/media-import.php` | Télécharge les visuels listés dans `data/exercise_media.json`, les convertit en WebP dans `public/media/` (relancer le seed ensuite) |
+| `php bin/vapid-keys.php [sujet]` | Crée les clés des notifications dans `.env` ; sujet : `mailto:adresse` ou l'adresse https de l'app |
+| `php bin/reminders.php [--dry-run] [--at="AAAA-MM-JJ HH:MM"]` | Envoie les rappels dus (lancé chaque minute par cron) ; `--dry-run` montre ce qui partirait |
 | `php bin/make-icons.php` | Régénère les icônes de la PWA |
 | `composer test` | Tests PHPUnit |
 
